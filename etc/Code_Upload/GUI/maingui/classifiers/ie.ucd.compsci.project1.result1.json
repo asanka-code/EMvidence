@@ -1,0 +1,1 @@
+{"name": "simple-loop-2", "parts": ["ArduinoLeonardo"], "frequency_analysis": [{"freq": 18000000.0, "sample_rate": 20000000.0, "span": 10000000.0}, {"freq": 288000000.0, "sample_rate": 20000000.0, "span": 2000000.0}], "location": "maingui/classifiers/ie.ucd.compsci.project1.result1.clf"}

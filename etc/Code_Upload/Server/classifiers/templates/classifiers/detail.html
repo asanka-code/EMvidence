@@ -1,0 +1,30 @@
+{% extends "classifiers/base.html" %}
+{% block title %}Classifier Detail{% endblock title %}
+{% block header %}Classifier Detail{% endblock header %}
+
+{% block content %}
+    <h1>{{ classifier.name }}</h1>
+
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    <p><strong>Created:</strong> <em>{{ classifier.created }}</em></p>
+  <p><strong>Tags:</strong> {% for tag in classifier.tag.all %} {{ tag }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+
+    <p>{{ classifier.description }}</p>
+    
+    {% if classifier.num_captures > 0 %}
+        <h4>Captures</h4>
+        {% for capture in classifier.get_captures %}
+            <ul>{{ capture }}</ul>
+        {% endfor %}
+    {% endif %}
+    {% if classifier.num_annotations > 0 %}
+        <h4>Annotations</h4>
+        {% for annotation in classifier.get_annotations %}
+            <ul>{{ annotation }}</ul>
+        {% endfor %}
+    {% endif %}
+
+    <h4>Downloads</h4>
+    Classifier Data <a href= '/static/classifiers/{{ classifier.uuid }}'>Download</a>
+
+{% endblock content %}

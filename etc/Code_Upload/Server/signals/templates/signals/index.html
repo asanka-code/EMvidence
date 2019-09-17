@@ -1,0 +1,35 @@
+{% extends "signals/base.html" %}
+{% block title %}Signal Record Index{% endblock title %}
+{% block header %}Signal Record Index{% endblock header %}
+{% block content %}
+    {% if latest_signal_list %}
+        {% for signal in latest_signal_list %}
+
+
+            <div class="blog-post">
+                <h3><a href= '/signals/{{ signal.id }}'>{{ signal.core_description }}</a>
+
+                </h3>
+                <p><strong>Created:</strong> <em>{{ signal.created }}</em></p>
+                <p><strong>Record capture segments:</strong>  {{signal.num_captures}} </p>
+                <p><strong>Record capture annotations:</strong>  {{signal.num_annotations}} </p>
+
+                <div class="callout">
+                    <ul class="menu simple">
+                        <li><a href="#">Author: {{ signal.owner.username }}</a></li>
+                    </ul>
+                </div>
+            </div>
+
+
+
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No polls are available.</p>
+    {% endif %}
+
+
+
+{% endblock content %}
+

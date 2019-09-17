@@ -1,0 +1,34 @@
+{% extends "classifiers/base.html" %}
+{% block title %}Classifier Index{% endblock title %}
+{% block header %}Classifier Index{% endblock header %}
+{% block content %}
+    {% if latest_classifier_list %}
+        {% for classifier in latest_classifier_list %}
+
+
+            <div class="blog-post">
+                <h3><a href= '/classifiers/{{ classifier.id }}'>{{ classifier.name }}</a>
+
+                </h3>
+                <p><strong>Created:</strong> <em>{{ classifier.created }}</em></p>
+
+                <p>{{ classifier.description }}</p>
+                <div class="callout">
+                    <ul class="menu simple">
+                        <li><a href="#">Author: {{ classifier.owner.username }}</a></li>
+                    </ul>
+                </div>
+            </div>
+
+
+
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No polls are available.</p>
+    {% endif %}
+
+
+
+{% endblock content %}
+

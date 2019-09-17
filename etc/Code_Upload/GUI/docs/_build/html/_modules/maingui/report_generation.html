@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>maingui.report_generation &#8212; MainGUI 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for maingui.report_generation</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">reportlab.pdfgen</span> <span class="k">import</span> <span class="n">canvas</span>
+<span class="kn">from</span> <span class="nn">reportlab.lib.pagesizes</span> <span class="k">import</span> <span class="n">A4</span>
+<span class="kn">from</span> <span class="nn">reportlab.lib.units</span> <span class="k">import</span> <span class="n">inch</span>
+<span class="kn">from</span> <span class="nn">maingui.settings</span> <span class="k">import</span> <span class="n">Report</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+
+
+<div class="viewcode-block" id="ReportFormats"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ReportFormats">[docs]</a><span class="k">class</span> <span class="nc">ReportFormats</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">PDF</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Markdown</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Text</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+<div class="viewcode-block" id="ReportGenerator"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ReportGenerator">[docs]</a><span class="k">class</span> <span class="nc">ReportGenerator</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">Report</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report</span> <span class="o">=</span> <span class="n">report</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">Canvas</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">pagesize</span><span class="o">=</span><span class="n">A4</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ReportGenerator.generate_report"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ReportGenerator.generate_report">[docs]</a>    <span class="k">def</span> <span class="nf">generate_report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report_header</span><span class="p">(</span><span class="s2">&quot;RF Forensics Report&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report_results</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report_footer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">report_signoff</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_report</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ReportGenerator.report_header"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ReportGenerator.report_header">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">report_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">heading</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ReportGenerator.report_subheading"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ReportGenerator.report_subheading">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">report_subheading</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ReportGenerator.report_results"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ReportGenerator.report_results">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">report_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ReportGenerator.report_footer"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ReportGenerator.report_footer">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">report_footer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ReportGenerator.report_signoff"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ReportGenerator.report_signoff">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">report_signoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ReportGenerator.save_report"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ReportGenerator.save_report">[docs]</a>    <span class="k">def</span> <span class="nf">save_report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ForensicsReport"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ForensicsReport">[docs]</a><span class="k">class</span> <span class="nc">ForensicsReport</span><span class="p">(</span><span class="n">ReportGenerator</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">Report</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span> <span class="o">=</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">inch</span>
+
+<div class="viewcode-block" id="ForensicsReport.report_header"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ForensicsReport.report_header">[docs]</a>    <span class="k">def</span> <span class="nf">report_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">heading</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setStrokeColorRGB</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setFillColorRGB</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="s2">&quot;Forenics Report&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mi">11</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">heading</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ForensicsReport.report_subheading"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ForensicsReport.report_subheading">[docs]</a>    <span class="k">def</span> <span class="nf">report_subheading</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setStrokeColorRGB</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setFillColorRGB</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mf">10.5</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Technician: </span><span class="si">{self.report.technician}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mf">10.2</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Date: </span><span class="si">{self.report.date}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ForensicsReport.report_results"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ForensicsReport.report_results">[docs]</a>    <span class="k">def</span> <span class="nf">report_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ForensicsReport.report_footer"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ForensicsReport.report_footer">[docs]</a>    <span class="k">def</span> <span class="nf">report_footer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Comments: </span><span class="si">{self.report.comments}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ForensicsReport.report_signoff"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.ForensicsReport.report_signoff">[docs]</a>    <span class="k">def</span> <span class="nf">report_signoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Sign-off: </span><span class="si">{self.report.signoff}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TechnicanReport"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.TechnicanReport">[docs]</a><span class="k">class</span> <span class="nc">TechnicanReport</span><span class="p">(</span><span class="n">ReportGenerator</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">Report</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span> <span class="o">=</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">inch</span>
+
+<div class="viewcode-block" id="TechnicanReport.report_header"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.TechnicanReport.report_header">[docs]</a>    <span class="k">def</span> <span class="nf">report_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">heading</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setStrokeColorRGB</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setFillColorRGB</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="s2">&quot;Technician Report&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mi">11</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">heading</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TechnicanReport.report_subheading"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.TechnicanReport.report_subheading">[docs]</a>    <span class="k">def</span> <span class="nf">report_subheading</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setStrokeColorRGB</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setFillColorRGB</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mf">10.5</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Technician: </span><span class="si">{self.report.technician}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mf">10.2</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Date: </span><span class="si">{self.report.date}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TechnicanReport.report_results"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.TechnicanReport.report_results">[docs]</a>    <span class="k">def</span> <span class="nf">report_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="TechnicanReport.report_footer"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.TechnicanReport.report_footer">[docs]</a>    <span class="k">def</span> <span class="nf">report_footer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Comments: </span><span class="si">{self.report.comments}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TechnicanReport.report_signoff"><a class="viewcode-back" href="../../maingui.html#maingui.report_generation.TechnicanReport.report_signoff">[docs]</a>    <span class="k">def</span> <span class="nf">report_signoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="o">.</span><span class="n">drawString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmargin</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">inch</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Sign-off: </span><span class="si">{self.report.signoff}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
+
+
+<span class="n">ReportTypes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Technican Report&quot;</span><span class="p">:</span> <span class="n">TechnicanReport</span><span class="p">,</span> <span class="s2">&quot;Forensics Report&quot;</span><span class="p">:</span> <span class="n">ForensicsReport</span><span class="p">}</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">new_file</span> <span class="o">=</span> <span class="s2">&quot;test.pdf&quot;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">Report</span><span class="p">()</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">technician</span> <span class="o">=</span> <span class="s2">&quot;John&quot;</span>
+    <span class="n">rg</span> <span class="o">=</span> <span class="n">ForensicsReport</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">new_file</span><span class="p">)</span>
+    <span class="n">rg</span><span class="o">.</span><span class="n">generate_report</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">MainGUI</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">maingui</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../maingui.html">maingui</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Main Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

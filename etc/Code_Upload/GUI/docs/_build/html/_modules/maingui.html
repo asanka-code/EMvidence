@@ -1,0 +1,695 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>maingui &#8212; MainGUI 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for maingui</h1><div class="highlight"><pre>
+<span></span><span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;0.1.0&#39;</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1"># PDF file handling</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QFileDialog</span>  <span class="c1"># For saving file</span>
+<span class="kn">from</span> <span class="nn">tempfile</span> <span class="k">import</span> <span class="n">mkstemp</span><span class="p">,</span> <span class="n">NamedTemporaryFile</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="k">import</span> <span class="n">copyfile</span>
+
+<span class="kn">from</span> <span class="nn">loguru</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">maingui.mainwindow</span> <span class="k">import</span> <span class="n">Ui_MainWindow</span>
+<span class="kn">from</span> <span class="nn">maingui.logindialog</span> <span class="k">import</span> <span class="n">Ui_LoginDialog</span>
+<span class="kn">from</span> <span class="nn">PySide2</span> <span class="k">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">maingui.partfinder</span> <span class="k">import</span> <span class="n">PartFinder</span>
+<span class="kn">from</span> <span class="nn">maingui.settings</span> <span class="k">import</span> <span class="n">AppSettings</span><span class="p">,</span> <span class="n">ServerLoginDetails</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span>
+
+<span class="c1"># Report Tab Preview</span>
+<span class="kn">from</span> <span class="nn">maingui.report_generation</span> <span class="k">import</span> <span class="n">Report</span><span class="p">,</span> <span class="n">ReportTypes</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="k">import</span> <span class="n">quote</span>  <span class="c1"># For URL path</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtWebEngineWidgets</span> <span class="k">import</span> <span class="n">QWebEngineView</span><span class="p">,</span> <span class="n">QWebEnginePage</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="k">import</span> <span class="n">QUrl</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtCore</span> <span class="k">import</span> <span class="n">QDate</span><span class="p">,</span> <span class="n">QTime</span>
+
+<span class="c1"># Storage</span>
+<span class="kn">from</span> <span class="nn">sigmf.sigmffile</span> <span class="k">import</span> <span class="n">SigMFFile</span>
+<span class="kn">from</span> <span class="nn">sigmf.sigmf_hash</span> <span class="k">import</span> <span class="n">calculate_sha512</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">PySide2.QtWidgets</span> <span class="k">import</span> <span class="n">QMessageBox</span>
+
+<span class="c1"># Analysis Tab</span>
+<span class="kn">from</span> <span class="nn">maingui.WebStorage</span> <span class="k">import</span> <span class="n">WebStorage</span>
+
+<span class="c1"># Capture Tab</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Qt5Agg&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_qt5agg</span> <span class="k">import</span> <span class="n">FigureCanvasQTAgg</span> <span class="k">as</span> <span class="n">FigureCanvas</span>
+<span class="kn">from</span> <span class="nn">matplotlib.figure</span> <span class="k">import</span> <span class="n">Figure</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">maingui.RFSource</span> <span class="k">import</span> <span class="n">RadioHW</span><span class="p">,</span> <span class="n">RFCaptureThread</span><span class="p">,</span> <span class="n">RFSource</span>
+
+
+<span class="c1"># Helper functions</span>
+
+<div class="viewcode-block" id="create_model_from_dict"><a class="viewcode-back" href="../maingui.html#maingui.create_model_from_dict">[docs]</a><span class="k">def</span> <span class="nf">create_model_from_dict</span><span class="p">(</span><span class="n">elist</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItemModel</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Use to populate listview in table</span>
+<span class="sd">    :param elist:</span>
+<span class="sd">    :param parent:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItemModel</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">elist</span><span class="p">:</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItem</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">appendRow</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="get_pdf_view_url"><a class="viewcode-back" href="../maingui.html#maingui.get_pdf_view_url">[docs]</a><span class="k">def</span> <span class="nf">get_pdf_view_url</span><span class="p">(</span><span class="n">path_to_pdf</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">relative</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a URL to display the selected PDF in a browser. Can be realtive to GUI exe.</span>
+<span class="sd">    :param path_to_pdf: Path to PDF</span>
+<span class="sd">    :param relative: Make URL relative to GUI?</span>
+<span class="sd">    :return: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">current_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>   <span class="c1"># Current path, used to get location of viewer.html</span>
+    <span class="k">if</span> <span class="n">relative</span><span class="p">:</span>
+        <span class="n">report_pdf</span> <span class="o">=</span> <span class="n">quote</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;file://</span><span class="si">{current_path}</span><span class="s2">/</span><span class="si">{path_to_pdf}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">report_pdf</span> <span class="o">=</span> <span class="n">quote</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;file://</span><span class="si">{path_to_pdf}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">viewer_url</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;file://</span><span class="si">{current_path}</span><span class="s2">/report_preview/web/viewer.html?file=</span><span class="si">{report_pdf}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="n">viewer_url</span></div>
+
+
+<div class="viewcode-block" id="LoginDialog"><a class="viewcode-back" href="../maingui.html#maingui.LoginDialog">[docs]</a><span class="k">class</span> <span class="nc">LoginDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dialog to get web back-end login details</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">serversettings</span><span class="o">=</span><span class="n">ServerLoginDetails</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LoginDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span> <span class="o">=</span> <span class="n">Ui_LoginDialog</span><span class="p">()</span>
+        <span class="c1"># self.ui.tabIdentification.setFocus()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">setupUi</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_server</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">serversettings</span><span class="o">.</span><span class="n">server</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_username</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">serversettings</span><span class="o">.</span><span class="n">username</span><span class="p">)</span></div>
+
+
+<span class="c1"># Plot GUI</span>
+<div class="viewcode-block" id="MatplotlibCanvas"><a class="viewcode-back" href="../maingui.html#maingui.MatplotlibCanvas">[docs]</a><span class="k">class</span> <span class="nc">MatplotlibCanvas</span><span class="p">(</span><span class="n">FigureCanvas</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Embed a Matplotlib plot, based on Matplotlib Example:</span>
+<span class="sd">    https://matplotlib.org/examples/user_interfaces/embedding_in_qt5.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="p">):</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+        <span class="n">FigureCanvas</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fig</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setParent</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+        <span class="n">FigureCanvas</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                   <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Expanding</span><span class="p">,</span>
+                                   <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Expanding</span><span class="p">)</span>
+        <span class="n">FigureCanvas</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># Set Defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span> <span class="o">=</span> <span class="mi">000</span>
+
+        <span class="c1"># Timer to update data</span>
+        <span class="n">timer</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QTimer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">timer</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update_figure</span><span class="p">)</span>
+        <span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="mi">5000</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MatplotlibCanvas.update_data"><a class="viewcode-back" href="../maingui.html#maingui.MatplotlibCanvas.update_data">[docs]</a>    <span class="k">def</span> <span class="nf">update_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Update MatplotlibCanvas Data&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span> <span class="o">=</span> <span class="n">sample_rate</span></div>
+
+<div class="viewcode-block" id="MatplotlibCanvas.update_figure"><a class="viewcode-back" href="../maingui.html#maingui.MatplotlibCanvas.update_figure">[docs]</a>    <span class="k">def</span> <span class="nf">update_figure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Update MatplotlibCanvas Figure&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">psd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">NFFT</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">Fs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span></div></div>
+
+
+<span class="c1"># Main Applciation</span>
+<div class="viewcode-block" id="MainGUI"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI">[docs]</a><span class="k">class</span> <span class="nc">MainGUI</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMainWindow</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MainGUI</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># Load settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_appsettings</span> <span class="o">=</span> <span class="n">AppSettings</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partfinder</span> <span class="o">=</span> <span class="n">PartFinder</span><span class="p">()</span>
+
+        <span class="c1"># Configure Logging</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_appsettings</span><span class="o">.</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;log_</span><span class="si">{time}</span><span class="s2">.log&quot;</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Load UI&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Configuration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span> <span class="o">=</span> <span class="n">ServerLoginDetails</span><span class="p">()</span>
+        <span class="c1"># Load Server Settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appsettings</span><span class="o">.</span><span class="n">read_server_settings</span><span class="p">()</span>
+
+        <span class="c1"># State data for Part Identification</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lv_parts_model</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: Optional[QtGui.QStandardItemModel]  # Model loaded from DB</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idn_images</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List of images for IDN tab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Index of currently displayed image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generated_report</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Last generated report</span>
+
+        <span class="c1"># UI Setup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span> <span class="o">=</span> <span class="n">Ui_MainWindow</span><span class="p">()</span>
+        <span class="c1"># self.ui.tabIdentification.setFocus()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">setupUi</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_ui</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idn_images_update</span><span class="p">()</span>
+
+        <span class="c1"># Triggering</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfcapture</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: RFCaptureThread</span>
+
+        <span class="c1"># Capture Tab</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Embed matplotlib canvas for Signal Preview&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_capture_preview_canvas</span> <span class="o">=</span> <span class="n">MatplotlibCanvas</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">frame_4</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">gridLayout_9</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_capture_preview_canvas</span><span class="p">)</span>
+
+        <span class="c1"># Analysis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">webstorage</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: WebStorage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_classifiers</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_signals</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="o">.</span><span class="n">server</span><span class="p">:</span>  <span class="c1"># If details saved, update Webstorage details</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">webstorage</span> <span class="o">=</span> <span class="n">WebStorage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="o">.</span><span class="n">server</span><span class="p">)</span>
+
+        <span class="c1"># Emdedded Webpage for Report Preview</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">page</span> <span class="o">=</span> <span class="n">QWebEnginePage</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">page</span><span class="o">.</span><span class="n">profile</span><span class="p">()</span><span class="o">.</span><span class="n">clearHttpCache</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">web_report_preview</span><span class="o">.</span><span class="n">setPage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preview_report</span><span class="p">(</span><span class="s2">&quot;report_preview/default.pdf&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MainGUI.preview_report"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.preview_report">[docs]</a>    <span class="k">def</span> <span class="nf">preview_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report_location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">relative_location</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Display the PDF report in the UI</span>
+<span class="sd">        :param relative_location:  Is PDF location relative to GUI exe?</span>
+<span class="sd">        :param report_location: Location of PDF</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pdf_url</span> <span class="o">=</span> <span class="n">get_pdf_view_url</span><span class="p">(</span><span class="n">report_location</span><span class="p">,</span> <span class="n">relative_location</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Previewing </span><span class="si">{pdf_url}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">web_report_preview</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">QUrl</span><span class="p">(</span><span class="n">pdf_url</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">web_report_preview</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MainGUI.setup_ui"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.setup_ui">[docs]</a>    <span class="k">def</span> <span class="nf">setup_ui</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set up the main GUI, connecting buttons and populating defaults</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Default values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_nextIDN</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;RF Forensics Tool v&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">__version__</span><span class="p">))</span>
+        <span class="c1"># Connect up buttons and actions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_partialIDN</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identify_part</span><span class="p">)</span>
+        <span class="c1"># Menus</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">action_Login</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">login</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">action_Exit</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">)</span>
+        <span class="c1"># Image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_IDNnext</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idn_image_next</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_IDNprevious</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idn_image_prev</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_nextIDN</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">load_identity_from_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_selectIDN</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">load_identity_from_images</span><span class="p">)</span>
+
+        <span class="c1"># Capture Tab</span>
+        <span class="n">hardware_backends</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">RadioHW</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">hardware_backends</span><span class="p">):</span>  <span class="c1"># Add options to ComboBox</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">cb_capture_hw</span><span class="o">.</span><span class="n">insertItems</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_capture_trigger</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trigger_capture</span><span class="p">)</span>
+
+        <span class="c1"># Storage Tab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_storage_load</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_load</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_storage_upload</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_upload</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">cb_upload_datatype</span><span class="o">.</span><span class="n">insertItems</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;cf32&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">upload_date</span><span class="o">.</span><span class="n">setDate</span><span class="p">(</span><span class="n">QDate</span><span class="o">.</span><span class="n">currentDate</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">upload_date</span><span class="o">.</span><span class="n">setTime</span><span class="p">(</span><span class="n">QTime</span><span class="o">.</span><span class="n">currentTime</span><span class="p">())</span>
+
+        <span class="c1"># Analysis Tab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_analysis_load</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_load_models</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_analysis_run</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_analysis</span><span class="p">)</span>
+
+        <span class="c1"># Report Generation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_save_report</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">report_save</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_report_generate</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">report_generate</span><span class="p">)</span>
+        <span class="n">report_types</span> <span class="o">=</span> <span class="n">ReportTypes</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">report_types</span><span class="p">):</span>  <span class="c1"># Add options to ComboBox</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">cb_report_template</span><span class="o">.</span><span class="n">insertItems</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">[</span><span class="n">t</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="MainGUI.idn_images_update"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.idn_images_update">[docs]</a>    <span class="k">def</span> <span class="nf">idn_images_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the list of images to show on the IDN tab from the loaded DB</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Load {len(self.partfinder.partdb)} images from DB.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Reset Image index</span>
+        <span class="n">maingui_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">board</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">partfinder</span><span class="o">.</span><span class="n">partdb</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">idn_images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{maingui_path}</span><span class="s2">/database/&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">partfinder</span><span class="o">.</span><span class="n">partdb</span><span class="p">[</span><span class="n">board</span><span class="p">][</span><span class="s2">&quot;Image&quot;</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">idn_set_image</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MainGUI.idn_set_image"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.idn_set_image">[docs]</a>    <span class="k">def</span> <span class="nf">idn_set_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the IDN image to the selected index</span>
+<span class="sd">        :param index:</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">index</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Setting IDN image to [</span><span class="si">{self.idn_image_index}</span><span class="s2">]: </span><span class="si">{self.idn_images[index]}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">idn_image_pixmap</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPixmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idn_images</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">idn_scaled_pixmap</span> <span class="o">=</span> <span class="n">idn_image_pixmap</span><span class="o">.</span><span class="n">scaled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">label_idn_image</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">KeepAspectRatio</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">label_idn_image</span><span class="o">.</span><span class="n">setPixmap</span><span class="p">(</span><span class="n">idn_scaled_pixmap</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span> <span class="o">=</span> <span class="n">index</span></div>
+
+<div class="viewcode-block" id="MainGUI.idn_image_next"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.idn_image_next">[docs]</a>    <span class="k">def</span> <span class="nf">idn_image_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show the next IDN image, looping if neccessary</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idn_images</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idn_set_image</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MainGUI.idn_image_prev"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.idn_image_prev">[docs]</a>    <span class="k">def</span> <span class="nf">idn_image_prev</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show the previous IDN image, looping if neccessary</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idn_images</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idn_set_image</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MainGUI.identify_part"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.identify_part">[docs]</a>    <span class="k">def</span> <span class="nf">identify_part</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initiliase the table to help identify parts, populating the table from the part finder</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pb_nextIDN</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">part_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partfinder</span><span class="o">.</span><span class="n">process_partname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_partialIDN</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lv_parts_model</span> <span class="o">=</span> <span class="n">create_model_from_dict</span><span class="p">(</span><span class="n">part_dict</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">lv_parts</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lv_parts_model</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.load_identity_from_list"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.load_identity_from_list">[docs]</a>    <span class="k">def</span> <span class="nf">load_identity_from_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use the currently selected row in the Parts table to identify the part/board</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">lv_parts</span><span class="o">.</span><span class="n">selectedIndexes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">board_selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lv_parts_model</span><span class="o">.</span><span class="n">itemFromIndex</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;board_selected: </span><span class="si">{board_selected}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_recommended_paramters</span><span class="p">(</span><span class="n">board_selected</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tabCenter</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.load_identity_from_images"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.load_identity_from_images">[docs]</a>    <span class="k">def</span> <span class="nf">load_identity_from_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use the currently open image to identify the board/part</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">idn_image_index</span>
+        <span class="n">board_selected</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partfinder</span><span class="o">.</span><span class="n">partdb</span><span class="p">)[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;board_selected: </span><span class="si">{board_selected}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_recommended_paramters</span><span class="p">(</span><span class="n">board_selected</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tabCenter</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.set_recommended_paramters"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.set_recommended_paramters">[docs]</a>    <span class="k">def</span> <span class="nf">set_recommended_paramters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">board_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the UI with the recommended parameters for board_name</span>
+<span class="sd">        :param board_name: String of board/part in database</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">board_selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partfinder</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">board_name</span><span class="p">)</span>
+        <span class="c1"># Set recommended setttings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_capture_freq</span><span class="o">.</span><span class="n">setPlainText</span><span class="p">(</span><span class="n">board_selected</span><span class="p">[</span><span class="s2">&quot;Freq&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_capture_span</span><span class="o">.</span><span class="n">setPlainText</span><span class="p">(</span><span class="n">board_selected</span><span class="p">[</span><span class="s2">&quot;Span&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_capture_sampling</span><span class="o">.</span><span class="n">setPlainText</span><span class="p">(</span><span class="n">board_selected</span><span class="p">[</span><span class="s2">&quot;Sampling&quot;</span><span class="p">])</span>
+        <span class="c1"># Set the chosen settings to recommended by default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_settings_freq</span><span class="o">.</span><span class="n">setPlainText</span><span class="p">(</span><span class="n">board_selected</span><span class="p">[</span><span class="s2">&quot;Freq&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_settings_span</span><span class="o">.</span><span class="n">setPlainText</span><span class="p">(</span><span class="n">board_selected</span><span class="p">[</span><span class="s2">&quot;Span&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_settings_sampling</span><span class="o">.</span><span class="n">setPlainText</span><span class="p">(</span><span class="n">board_selected</span><span class="p">[</span><span class="s2">&quot;Sampling&quot;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="MainGUI.trigger_capture"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.trigger_capture">[docs]</a>    <span class="k">def</span> <span class="nf">trigger_capture</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trigger a capture from the HW backend</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Trigger Capture&quot;</span><span class="p">)</span>
+        <span class="c1"># Read settings from UI</span>
+        <span class="n">window_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">sb_capture_length</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+        <span class="n">trigger_delay</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">sb_capture_trigger_delay</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+        <span class="n">radiobackend_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">cb_capture_hw</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
+        <span class="n">radiobackend</span> <span class="o">=</span> <span class="n">RadioHW</span><span class="p">([</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">RadioHW</span><span class="p">][</span><span class="n">radiobackend_idx</span><span class="p">])</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;window_size: </span><span class="si">{window_size}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;trigger_delay: </span><span class="si">{trigger_delay}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;radiobackend: </span><span class="si">{radiobackend}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Start capture thread</span>
+        <span class="n">rfsource</span> <span class="o">=</span> <span class="n">RFSource</span><span class="p">()</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_settings_freq</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;mhz&quot;</span><span class="p">))</span> <span class="o">*</span> <span class="mf">1e6</span>  <span class="c1"># MHz to Hz</span>
+        <span class="n">sample_rate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_settings_sampling</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;k&quot;</span><span class="p">))</span> <span class="o">*</span> <span class="mf">1e3</span>  <span class="c1"># kHz to Hz</span>
+        <span class="n">rfsource</span><span class="o">.</span><span class="n">configure_radio</span><span class="p">(</span><span class="n">radiobackend</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfcapture</span> <span class="o">=</span> <span class="n">RFCaptureThread</span><span class="p">(</span><span class="n">rfsource</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="s2">&quot;capture_complete_cb&quot;</span><span class="p">,</span> <span class="n">delay_s</span><span class="o">=</span><span class="n">trigger_delay</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfcapture</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MainGUI.capture_complete_cb"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.capture_complete_cb">[docs]</a>    <span class="k">def</span> <span class="nf">capture_complete_cb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Callback when RF capture has been completed</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;capture_complete_cb&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfcapture</span><span class="o">.</span><span class="n">rfsource</span><span class="o">.</span><span class="n">rfdata</span>
+        <span class="n">sample_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfcapture</span><span class="o">.</span><span class="n">rfsource</span><span class="o">.</span><span class="n">_radio_sampling_rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_capture_preview_canvas</span><span class="o">.</span><span class="n">update_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.login"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.login">[docs]</a>    <span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show the Login Dialog and save the username and password</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">serverdialog</span> <span class="o">=</span> <span class="n">LoginDialog</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="p">)</span>
+        <span class="c1"># Get info if &quot;OK&quot; pressed</span>
+        <span class="k">if</span> <span class="n">serverdialog</span><span class="o">.</span><span class="n">exec_</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="o">.</span><span class="n">server</span> <span class="o">=</span> <span class="n">serverdialog</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_server</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">serverdialog</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_username</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">serverdialog</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_password</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_appsettings</span><span class="o">.</span><span class="n">write_server_settings</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">webstorage</span> <span class="o">=</span> <span class="n">WebStorage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="o">.</span><span class="n">server</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">webstorage</span><span class="o">.</span><span class="n">login_details</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logindetails</span><span class="o">.</span><span class="n">password</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.analysis_load_models"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.analysis_load_models">[docs]</a>    <span class="k">def</span> <span class="nf">analysis_load_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load ML models from local hard drive or from web backend</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">success</span><span class="p">,</span> <span class="n">classifiers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">webstorage</span><span class="o">.</span><span class="n">get_classifiers</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_classifiers</span> <span class="o">=</span> <span class="n">classifiers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analysis_update_table</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">show_storage_error</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Failed to load Classifier list from web backend&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.analysis_update_table"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.analysis_update_table">[docs]</a>    <span class="k">def</span> <span class="nf">analysis_update_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the Analysis table</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifiers</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItemModel</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">setHorizontalHeaderLabels</span><span class="p">([</span><span class="s2">&quot;Classifier&quot;</span><span class="p">,</span> <span class="s2">&quot;Uploader&quot;</span><span class="p">,</span> <span class="s2">&quot;Description&quot;</span><span class="p">,</span> <span class="s2">&quot;Machine Learning Model&quot;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifiers</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">invisibleRootItem</span><span class="p">()</span><span class="o">.</span><span class="n">appendRow</span><span class="p">([</span>
+                    <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItem</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]),</span>
+                    <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItem</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;owner&#39;</span><span class="p">]),</span>
+                    <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItem</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]),</span>
+                    <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItem</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;ml&#39;</span><span class="p">])</span>
+                <span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tb_analysis_classifiers</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tb_analysis_classifiers</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tb_analysis_classifiers</span><span class="o">.</span><span class="n">resizeColumnsToContents</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tb_analysis_classifiers</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.run_analysis"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.run_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">run_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use the selected Classifier on the currently loaded data</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tb_analysis_classifiers</span><span class="o">.</span><span class="n">selectedIndexes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Run Analysis: {idx.row()}&quot;</span><span class="p">)</span>
+        <span class="n">classifier_selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classifiers</span><span class="p">[</span><span class="n">idx</span><span class="o">.</span><span class="n">row</span><span class="p">()]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">classifier_selected</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.storage_load"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.storage_load">[docs]</a>    <span class="k">def</span> <span class="nf">storage_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load saved RF signals from Web backend</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">success</span><span class="p">,</span> <span class="n">signals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">webstorage</span><span class="o">.</span><span class="n">get_signals</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Load RF signal list from web backend&quot;</span><span class="p">)</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItemModel</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">setHorizontalHeaderLabels</span><span class="p">([</span><span class="s2">&quot;Signal Name&quot;</span><span class="p">,</span> <span class="s2">&quot;Uploader&quot;</span><span class="p">,</span> <span class="s2">&quot;Created&quot;</span><span class="p">,</span> <span class="s2">&quot;UUID&quot;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">invisibleRootItem</span><span class="p">()</span><span class="o">.</span><span class="n">appendRow</span><span class="p">([</span>
+                    <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItem</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;core_description&#39;</span><span class="p">]),</span>
+                    <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItem</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;owner&#39;</span><span class="p">]),</span>
+                    <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItem</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">]),</span>
+                    <span class="n">QtGui</span><span class="o">.</span><span class="n">QStandardItem</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;uuid&#39;</span><span class="p">])</span>
+                <span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tv_storage</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tv_storage</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tv_storage</span><span class="o">.</span><span class="n">resizeColumnsToContents</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">tv_storage</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">show_storage_error</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Failed to load RF signal list from web backend&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.storage_upload"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.storage_upload">[docs]</a>    <span class="k">def</span> <span class="nf">storage_upload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Upload current data to the server with the SigMF data from the UI</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Reading settings from UI</span>
+        <span class="n">sig_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">upload_date</span><span class="o">.</span><span class="n">dateTime</span><span class="p">()</span><span class="o">.</span><span class="n">toString</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ISODate</span><span class="p">)</span>
+        <span class="n">sig_desciption</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">pt_upload_name</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">()</span>
+        <span class="n">sig_author</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_upload_author</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">sig_licence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_upload_licence</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">sig_datatype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">cb_upload_datatype</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
+        <span class="n">sig_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_upload_version</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">sig_tags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_upload_tags</span><span class="o">.</span><span class="n">text</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfcapture</span><span class="o">.</span><span class="n">rfsource</span><span class="o">.</span><span class="n">rfdata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">show_not_configured_warning</span><span class="p">(</span><span class="s2">&quot;RF data not available for upload.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Save rfdata to file and get hash</span>
+        <span class="n">temp_file</span> <span class="o">=</span> <span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Save RF data to temporary file </span><span class="si">{temp_file.name}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">temp_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfcapture</span><span class="o">.</span><span class="n">rfsource</span><span class="o">.</span><span class="n">rfdata</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">temp_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfcapture</span><span class="o">.</span><span class="n">rfsource</span><span class="o">.</span><span class="n">rfdata</span><span class="p">)</span>
+        <span class="n">file_sha</span> <span class="o">=</span> <span class="n">calculate_sha512</span><span class="p">(</span><span class="n">temp_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;RF data SHA: </span><span class="si">{file_sha}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Construct SigMF and uploads</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">sample_metafile</span> <span class="o">=</span> <span class="n">mkstemp</span><span class="p">()</span>
+        <span class="n">sample_capture1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;core:sample_start&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="n">sample_annotation1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;core:sample_count&#39;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span> <span class="s1">&#39;core:sample_start&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;global&quot;</span><span class="p">:</span>
+                        <span class="p">{</span><span class="s2">&quot;core:version&quot;</span><span class="p">:</span> <span class="n">sig_version</span><span class="p">,</span> <span class="s1">&#39;core:datatype&#39;</span><span class="p">:</span> <span class="n">sig_datatype</span><span class="p">,</span> <span class="s1">&#39;core:description&#39;</span><span class="p">:</span> <span class="n">sig_desciption</span><span class="p">,</span>
+                         <span class="s2">&quot;core:sha512&quot;</span><span class="p">:</span> <span class="n">file_sha</span><span class="p">,</span> <span class="s2">&quot;core:hw&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">cb_capture_hw</span><span class="o">.</span><span class="n">currentText</span><span class="p">(),</span>
+                         <span class="s2">&quot;core:author&quot;</span><span class="p">:</span> <span class="n">sig_author</span><span class="p">,</span>
+                         <span class="s2">&quot;core:license&quot;</span><span class="p">:</span> <span class="n">sig_licence</span><span class="p">},</span>
+                    <span class="s2">&quot;captures&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">sample_capture1</span><span class="p">],</span> <span class="s2">&quot;annotations&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">sample_annotation1</span><span class="p">]}</span>
+        <span class="c1"># Save metadata to file</span>
+
+        <span class="c1"># Validate</span>
+        <span class="n">signal1</span> <span class="o">=</span> <span class="n">SigMFFile</span><span class="p">(</span><span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">data_file</span><span class="o">=</span><span class="n">temp_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">signal1</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Validation Passed&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">signal1</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span> <span class="k">else</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Validation Failed&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Upload data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">webstorage</span><span class="o">.</span><span class="n">upload_signal</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">temp_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Successfully uploaded Signal&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.show_storage_error"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.show_storage_error">[docs]</a>    <span class="k">def</span> <span class="nf">show_storage_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show a message box if there is a problem connecting to the server.</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msgBox</span> <span class="o">=</span> <span class="n">QMessageBox</span><span class="p">()</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">)</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;There was an error connecting to the web storage server.&quot;</span><span class="p">)</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setInformativeText</span><span class="p">(</span><span class="s2">&quot;Check your login credentials.&quot;</span><span class="p">)</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setStandardButtons</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Ok</span><span class="p">)</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Warning</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">msgBox</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MainGUI.show_not_configured_warning"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.show_not_configured_warning">[docs]</a>    <span class="k">def</span> <span class="nf">show_not_configured_warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show a message box if the GUI is not configured correctly</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msgBox</span> <span class="o">=</span> <span class="n">QMessageBox</span><span class="p">()</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">)</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Cofiguration Error&quot;</span><span class="p">)</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setInformativeText</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setStandardButtons</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Ok</span><span class="p">)</span>
+        <span class="n">msgBox</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Warning</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">msgBox</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MainGUI.report_save"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.report_save">[docs]</a>    <span class="k">def</span> <span class="nf">report_save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the last generated PDF</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">report_filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getSaveFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Save Report&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;PDF (*.pdf)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">report_filename</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">generated_report</span><span class="p">:</span>
+            <span class="n">copyfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generated_report</span><span class="p">,</span> <span class="n">report_filename</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Copied </span><span class="si">{self.generated_report}</span><span class="s2"> to </span><span class="si">{report_filename}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainGUI.report_generate"><a class="viewcode-back" href="../maingui.html#maingui.MainGUI.report_generate">[docs]</a>    <span class="k">def</span> <span class="nf">report_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a report using the selection template from the dropdown</span>
+<span class="sd">        Create temporary PDF file and preview</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create the Report data object</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">Report</span><span class="p">()</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">technician</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_report_technician</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_report_date</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_report_location</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">report_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_report_id</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">comments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">te_report_comments</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">()</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">signoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">le_report_signoff</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+
+        <span class="c1"># Get the selected template from the GUI</span>
+        <span class="n">selected_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">cb_report_template</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
+        <span class="n">ReportClass</span> <span class="o">=</span> <span class="n">ReportTypes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">cb_report_template</span><span class="o">.</span><span class="n">itemText</span><span class="p">(</span><span class="n">selected_index</span><span class="p">)]</span>
+
+        <span class="c1"># Generate a temporary file</span>
+        <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">generated_report</span> <span class="o">=</span> <span class="n">mkstemp</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Create temp file </span><span class="si">{self.generated_report}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">rg</span> <span class="o">=</span> <span class="n">ReportClass</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">generated_report</span><span class="p">)</span>
+        <span class="n">rg</span><span class="o">.</span><span class="n">generate_report</span><span class="p">()</span>
+
+        <span class="c1"># Preview in UI</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preview_report</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generated_report</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../maingui.html#maingui.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run main Qt GUI</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">([])</span>
+    <span class="n">application</span> <span class="o">=</span> <span class="n">MainGUI</span><span class="p">()</span>
+    <span class="n">application</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">())</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># CLI arg handling</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--logging&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Enable logging to stdout and log file.&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">logging</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+    <span class="c1"># Call</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">MainGUI</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">maingui</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Main Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

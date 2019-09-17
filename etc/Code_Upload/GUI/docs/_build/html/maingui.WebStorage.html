@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>maingui.WebStorage package &#8212; MainGUI 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="contributing.html" />
+    <link rel="prev" title="maingui.RFSource package" href="maingui.RFSource.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="maingui-webstorage-package">
+<h1>maingui.WebStorage package<a class="headerlink" href="#maingui-webstorage-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-maingui.WebStorage">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-maingui.WebStorage" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="maingui.WebStorage.WebStorage">
+<em class="property">class </em><code class="descclassname">maingui.WebStorage.</code><code class="descname">WebStorage</code><span class="sig-paren">(</span><em>base_url: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.download_classifier">
+<code class="descname">download_classifier</code><span class="sig-paren">(</span><em>uuid: str</em><span class="sig-paren">)</span> &#x2192; Optional[str]<a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.download_classifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.download_classifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.download_file">
+<code class="descname">download_file</code><span class="sig-paren">(</span><em>namespace: str</em>, <em>uuid: str</em><span class="sig-paren">)</span> &#x2192; Optional[str]<a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.download_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.download_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download the classifier specified by the supplied UUID and return it’s location
+:param namespace: Namespace to download file from, e.g. signals
+:param uuid: The UUID of the classifier to download
+:return: A temp file on the local hard disk, or None if it fails</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.download_signal">
+<code class="descname">download_signal</code><span class="sig-paren">(</span><em>uuid: str</em><span class="sig-paren">)</span> &#x2192; Optional[str]<a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.download_signal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.download_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download a Signal Record to a temporary file
+:param uuid: The UUID of the record
+:return: The file path if successful</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.get_classifiers">
+<code class="descname">get_classifiers</code><span class="sig-paren">(</span><em>) -&gt; (&lt;class 'bool'&gt;</em>, <em>&lt;class 'dict'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.get_classifiers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.get_classifiers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.get_idb_images">
+<code class="descname">get_idb_images</code><span class="sig-paren">(</span><em>) -&gt; (&lt;class 'bool'&gt;</em>, <em>&lt;class 'dict'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.get_idb_images"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.get_idb_images" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.get_idn_db">
+<code class="descname">get_idn_db</code><span class="sig-paren">(</span><em>) -&gt; (&lt;class 'bool'&gt;</em>, <em>&lt;class 'dict'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.get_idn_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.get_idn_db" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.get_json_api">
+<code class="descname">get_json_api</code><span class="sig-paren">(</span><em>api_name) -&gt; (&lt;class 'bool'&gt;</em>, <em>&lt;class 'dict'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.get_json_api"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.get_json_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query the WEb backend API using the login details, returns a JSON object
+:param api_name: namespace for API, e.g. signals
+:return: success, dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.get_signals">
+<code class="descname">get_signals</code><span class="sig-paren">(</span><em>) -&gt; (&lt;class 'bool'&gt;</em>, <em>&lt;class 'dict'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.get_signals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.get_signals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.login_details">
+<code class="descname">login_details</code><span class="sig-paren">(</span><em>username: str</em>, <em>password: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.login_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.login_details" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save login details
+:param username:
+:param password:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="maingui.WebStorage.WebStorage.upload_signal">
+<code class="descname">upload_signal</code><span class="sig-paren">(</span><em>metadata: dict</em>, <em>datafile: str</em><span class="sig-paren">)</span> &#x2192; Optional[str]<a class="reference internal" href="_modules/maingui/WebStorage.html#WebStorage.upload_signal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maingui.WebStorage.WebStorage.upload_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload a Signal Record, return the UUID if successfully
+:param metadata: JSON dict of the SigMF data descriving the record
+:param datafile: Path to the data file to upload
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">MainGUI</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">maingui</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="maingui.html">maingui package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">maingui</a><ul>
+  <li><a href="maingui.html">maingui package</a><ul>
+      <li>Previous: <a href="maingui.RFSource.html" title="previous chapter">maingui.RFSource package</a></li>
+      <li>Next: <a href="contributing.html" title="next chapter">&lt;no title&gt;</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Main Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/maingui.WebStorage.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

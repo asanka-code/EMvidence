@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>maingui.RFSource &#8212; MainGUI 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for maingui.RFSource</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This file contains the code requires to start an RF surce for the radio</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">zmq</span>
+<span class="kn">from</span> <span class="nn">loguru</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">import</span> <span class="nn">execnet</span>  <span class="c1"># MIT Licenced</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Qt5Agg&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+
+<div class="viewcode-block" id="RadioHW"><a class="viewcode-back" href="../../maingui.RFSource.html#maingui.RFSource.RadioHW">[docs]</a><span class="k">class</span> <span class="nc">RadioHW</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Support Hardware Backends</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Demo</span> <span class="o">=</span> <span class="s2">&quot;RADIO_HW_DEMO&quot;</span>
+    <span class="n">HackRFOne</span> <span class="o">=</span> <span class="s2">&quot;RADIO_HW_HACKRF_ONE&quot;</span>
+    <span class="n">ADIPluto</span> <span class="o">=</span> <span class="s2">&quot;RADIO_HW_ADI_PLUTO&quot;</span></div>
+
+
+<div class="viewcode-block" id="RFSource"><a class="viewcode-back" href="../../maingui.RFSource.html#maingui.RFSource.RFSource">[docs]</a><span class="k">class</span> <span class="nc">RFSource</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5557</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Init an RFSource object, creating the ZeroMQ context and socket</span>
+<span class="sd">        :param host: The ZeroMQ source host, default localhost</span>
+<span class="sd">        :param port: The ZeroMQ source port, default 5557</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># ZeroMQ Subsciber</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">SUB</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_source</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;tcp://</span><span class="si">{host}</span><span class="s2">:</span><span class="si">{port}</span><span class="s2">&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Created RFSource: </span><span class="si">{self._zmq_source}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Radio data: Demo by default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_radio</span> <span class="o">=</span> <span class="n">RadioHW</span><span class="o">.</span><span class="n">Demo</span>  <span class="c1"># Default to demo mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_radio_frequency</span> <span class="o">=</span> <span class="mf">3e8</span>  <span class="c1"># Hz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_radio_sampling_rate</span> <span class="o">=</span> <span class="mf">3e6</span>  <span class="c1"># Hz</span>
+
+        <span class="c1"># Processes for GnuRadio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exec_group</span> <span class="o">=</span> <span class="n">execnet</span><span class="o">.</span><span class="n">Group</span><span class="p">()</span>
+
+        <span class="c1"># RF data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfdata</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: np.array</span>
+
+<div class="viewcode-block" id="RFSource.configure_radio"><a class="viewcode-back" href="../../maingui.RFSource.html#maingui.RFSource.RFSource.configure_radio">[docs]</a>    <span class="k">def</span> <span class="nf">configure_radio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radiohw</span><span class="p">:</span> <span class="n">RadioHW</span><span class="p">,</span> <span class="n">frequency</span><span class="p">,</span> <span class="n">sampling</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Configure the Radio</span>
+<span class="sd">        :param radiohw: Select the Radio Hardware back-end, from enum</span>
+<span class="sd">        :param frequency: Center Frequency in Hz</span>
+<span class="sd">        :param sampling: Sampling Rate in Hz</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_radio</span> <span class="o">=</span> <span class="n">radiohw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_radio_frequency</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">frequency</span><span class="p">)</span>  <span class="c1"># Hz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_radio_sampling_rate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sampling</span><span class="p">)</span>  <span class="c1"># Hz</span></div>
+
+<div class="viewcode-block" id="RFSource.start"><a class="viewcode-back" href="../../maingui.RFSource.html#maingui.RFSource.RFSource.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start subscribing to data</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Start GnuRadio block&quot;</span><span class="p">)</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call Python2 process to run GnuRadio code to start data capture</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">argument_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_zmq_source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radio</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radio_frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radio_sampling_rate</span><span class="p">]</span>
+        <span class="n">py2_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/RadioInterface&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Py2 SYS Path: </span><span class="si">{py2_path}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">gw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exec_group</span><span class="o">.</span><span class="n">makegateway</span><span class="p">(</span><span class="s2">&quot;popen//python=python2&quot;</span><span class="p">)</span>
+        <span class="n">channel</span> <span class="o">=</span> <span class="n">gw</span><span class="o">.</span><span class="n">remote_exec</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;import sys</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                 <span class="n">f</span><span class="s2">&quot;sys.path.append(&#39;</span><span class="si">{py2_path}</span><span class="s2">&#39;)</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                 <span class="n">f</span><span class="s2">&quot;from radio_interface import radio_backend</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                 <span class="n">f</span><span class="s2">&quot;channel.send(radio_backend(*channel.receive()))&quot;</span>
+                                 <span class="p">)</span>
+        <span class="n">channel</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">argument_list</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Start Subscriber&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_zmq_source</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">setsockopt_string</span><span class="p">(</span><span class="n">zmq</span><span class="o">.</span><span class="n">SUBSCRIBE</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># Subscribe to all</span></div>
+
+<div class="viewcode-block" id="RFSource.capture"><a class="viewcode-back" href="../../maingui.RFSource.html#maingui.RFSource.RFSource.capture">[docs]</a>    <span class="k">def</span> <span class="nf">capture</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Capture Data from the RF back-end</span>
+<span class="sd">        :param window_size: Multiplied by sample rate to get number of samples to be captured</span>
+<span class="sd">        :return: Temp data file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Capture&quot;</span><span class="p">)</span>
+        <span class="n">rfdata_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_radio_sampling_rate</span> <span class="o">*</span> <span class="p">(</span><span class="n">window_size</span> <span class="o">*</span> <span class="mf">0.001</span><span class="p">))</span>
+        <span class="n">data_segment</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_segment</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">rfdata_length</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;len(data_segment): {len(data_segment)}&quot;</span><span class="p">)</span>
+            <span class="n">radio_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">radio_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>  <span class="c1"># 1D array</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># Complex data</span>
+            <span class="n">data_segment</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_segment</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfdata</span> <span class="o">=</span> <span class="n">data_segment</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">rfdata_length</span><span class="p">]</span>  <span class="c1"># Truncate if needed</span></div>
+
+<div class="viewcode-block" id="RFSource.stop"><a class="viewcode-back" href="../../maingui.RFSource.html#maingui.RFSource.RFSource.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stop subscribing</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stop Subscriber&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stop GnuRadio process&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exec_group</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="RFCaptureThread"><a class="viewcode-back" href="../../maingui.RFSource.html#maingui.RFSource.RFCaptureThread">[docs]</a><span class="k">class</span> <span class="nc">RFCaptureThread</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rfsource</span><span class="p">:</span> <span class="n">RFSource</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">delay_s</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A thread to run the RF Capture in the background</span>
+<span class="sd">        :param rfsource: The RFSource class, handling ZeroMQ connection and data capture</span>
+<span class="sd">        :param delay_s: Delay before starting the capture</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfsource</span> <span class="o">=</span> <span class="n">rfsource</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_delay</span> <span class="o">=</span> <span class="n">delay_s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span> <span class="o">=</span> <span class="n">callback</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RFCaptureThread</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfsource</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<div class="viewcode-block" id="RFCaptureThread.run"><a class="viewcode-back" href="../../maingui.RFSource.html#maingui.RFSource.RFCaptureThread.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_delay</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfsource</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfsource</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">:</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">)()</span>
+        <span class="n">exit</span><span class="p">()</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Quick test to verify it works, using the demo backend, plotting the the FFT</span>
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">RFSource</span><span class="p">()</span>
+    <span class="n">sample_rate</span> <span class="o">=</span> <span class="mf">32e6</span>
+    <span class="n">rf</span><span class="o">.</span><span class="n">configure_radio</span><span class="p">(</span><span class="n">RadioHW</span><span class="o">.</span><span class="n">Demo</span><span class="p">,</span> <span class="mf">2e6</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">)</span>
+
+    <span class="c1"># rf.start()</span>
+    <span class="c1"># rf.capture()</span>
+    <span class="c1"># rf.stop()</span>
+    <span class="c1"># data = rf.rfdata</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">RFCaptureThread</span><span class="p">(</span><span class="n">rf</span><span class="p">)</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">rfsource</span><span class="o">.</span><span class="n">rfdata</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="c1"># plot the PSD of the selected sample range of the numpy data array</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">psd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">NFFT</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">Fs</span><span class="o">=</span><span class="n">sample_rate</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">MainGUI</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">maingui</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../maingui.html">maingui</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Main Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
