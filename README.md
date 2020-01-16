@@ -1,5 +1,7 @@
 # EMvidence
 
+Run the 'start.sh' shell script to start the web service.
+
 TODO:
 
 1. Implement the login page.
