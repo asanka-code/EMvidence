@@ -1,10 +1,17 @@
+<!DOCTYPE html>
+
 <html>
     <head>
       <style>
-        table, th, tr, td {
-          border: 1px solid black;
-          border-collapse: collapse;
+
+        .login-form {
+          margin: auto;
+          width: 20%;
+          border: 3px solid #73AD21;
+          padding: 10px; 
         }
+
+
       </style>
 
     <title>EMvidence Side-Channel Investigator</title>
@@ -13,8 +20,25 @@
     <body>
     <h1>EMvidence Side-Channel Investigator</h1>
 
-    <p>Enter login credentials here</p>
     <!--Get the user to submit credintials and then redirect to the dashboard-->
-    
-    </body>
+  
+    <div class="login-form">
+    <p>Please login to continue...</p>
+    <form action="/user-authentication" method="POST">
+      <table>
+        <tr>
+          <td>User name:</td> <td><input type="text" name="uname"><br></td>
+        </tr>
+        <tr>
+          <td>Password:</td>  <td><input type="password" name="passwd"></td>
+        </tr>
+
+        <tr>
+          <td></td> <td><input type="submit" value="Login"></td>
+        </tr>
+
+      </table>
+    </form>
+    </div>
+
 </html>
