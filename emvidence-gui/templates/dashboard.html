@@ -1,9 +1,68 @@
 <html>
     <head>
+
+      <!-----------JQuery Stuff------------->
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+      <link rel="stylesheet" href="/resources/demos/style.css">
+      <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+      <script>
+        $( function() {
+          $( "#menu" ).menu();
+        } );
+      </script>
       <style>
-        table, th, tr, td {
-          border: 1px solid black;
-          border-collapse: collapse;
+        .ui-menu {
+          width: 200px;
+          vertical-align: top;
+        }
+      </style>
+
+      <style>
+
+      #modules-button {
+        width: 60;
+      }
+      .toolbar {
+        font-size: 1em;
+        width: 100%;
+      }
+      </style>
+
+      <script>
+      $( function() {
+        var page = $( "#page" );
+        var basicControls = [ "#print", "#bold", "#italic", "#undo", "#redo" ];
+        var valueControls = [ "#fontsize", "#forecolor", "#hilitecolor", "#backcolor", "fontname" ];
+
+        $( ".toolbar" ).controlgroup();
+      
+        $( basicControls.concat( valueControls ).join( ", " ) ).on( "click change selectmenuchange",
+        function() {
+          document.execCommand(
+            this.id,
+            false,
+            $( this ).val()
+          );
+        } );
+        $( "form" ).on( "submit", function( event ) {
+          event.preventDefault();
+        });
+      } );
+      </script>
+      <!------------------------------------->
+
+      <style>
+        td {
+          align-self: auto;
+        }
+
+        #footer {
+          position: fixed;
+          bottom: 0; 
+          width: 100%;
         }
       </style>
 
@@ -11,16 +70,73 @@
     </head>
   
     <body>
-    <h1>EMvidence Dashboard</h1>
 
+    <div id="header">
+    <h1>EMvidence Dashboard</h1>
+    <div class="toolbar">
+      <button id="cases">Cases</button>
+      <button id="data">Data</button>
+      <select id="modules-button" title="Modules">
+        <option selected disabled>Modules</option>
+        <option value="blue">Dashboard</option>
+        <option value="white">Visualize</option>
+        <option value="red">DEMA</option>
+        <option value="yellow">Add/Remove Modules</option>
+      </select>
+      <button id="sdr-devices">SDR Devices</button>
+      <button id="help">Help</button>
+      <button id="about">About</button>
+      <button id="logout">Logout</button>
+    </div>
+    <br/>
+    <hr>
+    </div>
+    
+
+
+
+
+
+
+    <!--
     <table style="width:100%">
       <tr>
-        <td>Data:</td>
+          <ul id="menu">
+            <li class="ui-state-disabled"><div>Toys (n/a)</div></li>
+            <li><div>Data</div></li>
+            <li><div>Cases</div></li>
+            <li><div>Modules</div>
+              <ul>
+                <li class="ui-state-disabled"><div>Modules</div></li>
+                <li><div>Visualize</div></li>
+                <li><div>DEMA Key Recovery</div></li>
+                <li><div>Add/Remove Module</div></li>
+              </ul>
+            </li>
+            <li><div>SDR Devices</div></li>
+            <li class="ui-state-disabled"><div>Specials (n/a)</div></li>
+          </ul>
+      </tr>
+        
+      <tr>
         <td>
           <img src="/plot" alt="my plot">
         </td>
       </tr>
     </table>
+    -->
+
+
+    <img src="/plot" alt="my plot">
     
+
+
+
+    <div id="footer">
+    <br/>
+    <hr width="100%">
+    EMvidence Side-Channel Investigator
+    </div>
+
     </body>
 </html>
