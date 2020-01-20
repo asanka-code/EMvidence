@@ -1,64 +1,53 @@
 <html>
     <head>
-
-      <!-----------JQuery Stuff------------->
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
       <link rel="stylesheet" href="/resources/demos/style.css">
       <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
       <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
       <script>
+
         $( function() {
           $( "#menu" ).menu();
         } );
+      
+        $( function() {
+          $( ".toolbar" ).controlgroup();
+
+          $( "#logout" ).click( function() {
+            var answer = confirm("Do you want to logout?");
+            if (answer == true){
+              window.location.href = "/";
+            } else {
+              // do nothing.
+            }
+          });
+
+          $( "form" ).on( "submit", function( event ) {
+            event.preventDefault();
+          });
+        } );
+
       </script>
+
+
       <style>
         .ui-menu {
           width: 200px;
           vertical-align: top;
         }
-      </style>
-
-      <style>
-
-      #modules-button {
-        width: 60;
-      }
-      .toolbar {
-        font-size: 1em;
-        width: 100%;
-      }
-      </style>
-
-      <script>
-      $( function() {
-        var page = $( "#page" );
-        var basicControls = [ "#print", "#bold", "#italic", "#undo", "#redo" ];
-        var valueControls = [ "#fontsize", "#forecolor", "#hilitecolor", "#backcolor", "fontname" ];
-
-        $( ".toolbar" ).controlgroup();
-      
-        $( basicControls.concat( valueControls ).join( ", " ) ).on( "click change selectmenuchange",
-        function() {
-          document.execCommand(
-            this.id,
-            false,
-            $( this ).val()
-          );
-        } );
-        $( "form" ).on( "submit", function( event ) {
-          event.preventDefault();
-        });
-      } );
-      </script>
-      <!------------------------------------->
-
-      <style>
+        #modules-button {
+          width: 60;
+        }
+        .toolbar {
+          font-size: 1em;
+          width: 100%;
+        }
         td {
           align-self: auto;
         }
-
         #footer {
           position: fixed;
           bottom: 0; 
@@ -95,40 +84,26 @@
 
 
 
-
-
-
-    <!--
     <table style="width:100%">
       <tr>
-          <ul id="menu">
-            <li class="ui-state-disabled"><div>Toys (n/a)</div></li>
-            <li><div>Data</div></li>
-            <li><div>Cases</div></li>
-            <li><div>Modules</div>
-              <ul>
-                <li class="ui-state-disabled"><div>Modules</div></li>
-                <li><div>Visualize</div></li>
-                <li><div>DEMA Key Recovery</div></li>
-                <li><div>Add/Remove Module</div></li>
-              </ul>
-            </li>
-            <li><div>SDR Devices</div></li>
-            <li class="ui-state-disabled"><div>Specials (n/a)</div></li>
-          </ul>
+        <td>
+          <img src="/plot" alt="my plot">
+        </td>
+        <td>
+          <img src="/plot" alt="my plot">
+        </td>
       </tr>
         
       <tr>
         <td>
           <img src="/plot" alt="my plot">
         </td>
+        <td>
+          <img src="/plot" alt="my plot">
+        </td>
       </tr>
     </table>
-    -->
 
-
-    <img src="/plot" alt="my plot">
-    
 
 
 
