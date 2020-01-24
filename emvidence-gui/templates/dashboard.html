@@ -63,19 +63,29 @@
     <div id="header">
     <h1>EMvidence Dashboard</h1>
     <div class="toolbar">
-      <button id="cases">Cases</button>
+      <button id="reports">Reports</button>
       <button id="data">Data</button>
-      <select id="modules-button" title="Modules">
-        <option selected disabled>Modules</option>
-        <option value="blue">Dashboard</option>
-        <option value="white">Visualize</option>
-        <option value="red">DEMA</option>
-        <option value="yellow">Add/Remove Modules</option>
-      </select>
-      <button id="sdr-devices">SDR Devices</button>
+
+      <button id="capture">Capture data</button>
+      <button id="analyze">Analyze data</button>
+      <button id="settings">Settings</button>
       <button id="help">Help</button>
       <button id="about">About</button>
       <button id="logout">Logout</button>
+
+      <!--
+      <button id="sdr-devices">SDR devices</button>
+      <select id="settings" title="Settings">
+        <option selected disabled>Dashboard</option>
+        <option value="general-settings">General settings</option>
+        <option value="add-module">Add a module</option>
+        <option value="remove-module">Remove a module</option>
+        <option value="white">Visualize</option>
+        <option value="red">DEMA</option>
+        <option value="yellow">Add/Remove modules</option>
+      </select>
+      -->
+
     </div>
     <br/>
     <hr>
@@ -86,11 +96,20 @@
 
     <table style="width:100%">
       <tr>
-        <td>
-          <img src="/plot" alt="my plot">
+        <td text-align="center">
+          356GB of EM traces in 300 files.
         </td>
         <td>
-          <img src="/plot" alt="my plot">
+          23 IoT supported such as Arduino, Raspberry Pi, etc.
+        </td>
+      </tr>
+
+      <tr>
+        <td text-align="center">
+          6 SDR devices supported - HackRF, RTL-SDR, PlutoSDR, etc.
+        </td>
+        <td>
+          Available 15 modules for device analysis.
         </td>
       </tr>
         
