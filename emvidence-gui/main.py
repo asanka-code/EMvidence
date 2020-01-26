@@ -17,6 +17,25 @@ def index(name=None):
   #return render_template('index.html', name=name)
   return render_template('login.html', name=name)
 
+#-------------------------------------------------------------------------------
+@app.route("/dashboard")
+def dashboard(name=None):
+  return render_template('dashboard.html', name=name)
+
+#-------------------------------------------------------------------------------
+@app.route("/settings")
+def settings(name=None):
+  return render_template('settings.html', name=name)
+
+#-------------------------------------------------------------------------------
+@app.route("/capture")
+def capture(name=None):
+  return render_template('capture-data.html', name=name)
+
+#-------------------------------------------------------------------------------
+@app.route("/analyse")
+def analyse(name=None):
+  return render_template('analyse-data.html', name=name)
 
 #-------------------------------------------------------------------------------
 @app.route("/user-authentication", methods=['POST', 'GET'])

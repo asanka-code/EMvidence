@@ -1,0 +1,77 @@
+<script>
+    $( function() {
+      $( "#menu" ).menu();
+    } );
+  
+    $( function() {
+      $( ".toolbar" ).controlgroup();
+
+      $( "#logout" ).click( function() {
+        var answer = confirm("Do you want to logout?");
+        if (answer == true){
+          window.location.href = "/";
+        } else {
+          // do nothing.
+        }
+      });
+
+      $( "#settings" ).click( function() {
+        window.location.href = "/settings";        
+      });
+
+      $( "#dashboard" ).click( function() {
+        window.location.href = "/dashboard";        
+      });
+
+      $( "#capture" ).click( function() {
+        window.location.href = "/capture";        
+      });
+    
+      $( "#analyse" ).click( function() {
+        window.location.href = "/analyse";        
+      });
+
+      $( "form" ).on( "submit", function( event ) {
+        event.preventDefault();
+      });
+    } );
+</script>
+
+<style>
+    .toolbar {
+        font-size: 1em;
+        width: 100%;
+    }
+</style>
+
+<div id="header">
+    <h1>EMvidence Dashboard</h1>
+    <div class="toolbar">
+      <button id="dashboard">Dashboard</button>
+      <button id="reports">Reports</button>
+      <button id="data">Data</button>
+
+      <button id="capture">Capture data</button>
+      <button id="analyse">Analyze data</button>
+      <button id="settings">Settings</button>
+      <button id="help">Help</button>
+      <button id="about">About</button>
+      <button id="logout">Logout</button>
+
+      <!--
+      <button id="sdr-devices">SDR devices</button>
+      <select id="settings" title="Settings">
+        <option selected disabled>Dashboard</option>
+        <option value="general-settings">General settings</option>
+        <option value="add-module">Add a module</option>
+        <option value="remove-module">Remove a module</option>
+        <option value="white">Visualize</option>
+        <option value="red">DEMA</option>
+        <option value="yellow">Add/Remove modules</option>
+      </select>
+      -->
+
+    </div>
+    <br/>
+    <hr>
+    </div>
