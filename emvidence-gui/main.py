@@ -59,6 +59,20 @@ def plot():
   FigureCanvas(fig).print_png(output)
   return Response(output.getvalue(), mimetype='image/png')
 
+#-------------------------------------------------------------------------------
+@app.route("/capture-data", methods=['POST', 'GET'])
+def capture_data():
+  #return "Hello World!"
+  sdr = request.form['sdr']
+  ip_address = request.form['ip_address']
+  port_number = request.form['port_number']
+  sampling_rate = request.form['sampling_rate']
+  sampling_duration = request.form['sampling_duration']
+  hash_function = request.form['hash_function']
+  file_name = request.form['file_name']
+
+  response = sdr + " " + ip_address + " " + port_number + " " + sampling_rate + " " + sampling_duration + " " + hash_function + " " + file_name
+  return response
 
 ################################### Functions ######################################
 
