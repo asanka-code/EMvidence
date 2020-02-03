@@ -25,6 +25,53 @@
         }
       </style>
 
+      <script>
+
+        $( function() {
+          $( "#sdr-device" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#sampling-rate" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#sampling-duration" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#hash-function" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( ".capture-button button" ).button();
+          $( "button" ).click( function( event ) {
+            event.preventDefault();
+            alert("Button Clicked!")
+          } );
+        } );
+      </script>
+
+
+
+
+
     <title>EMvidence Side-Channel Investigator</title>
     </head>
   
@@ -33,8 +80,107 @@
     <!-- the main toolbar-->
     {% include 'main-toolbar.html' %}
 
+    <div class="capture-settings">
+      <h6>Data Capture Settings</h6>
+      <form action="/user-authentication" method="POST">
+        <fieldset>
+        <legend>Data Capture Settings</legend>
 
-    Capture data page is here...
+
+        <table>
+          <tr>
+            <td>
+              <label>SDR Device:</label>
+              <select id = "sdr-device">
+                <option value = "1">RTL-SDR</option>
+                <option value = "2" selected="selected">HackRF One</option>
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td>ZeroMQ Server IP Address:</td> <td><input type="text" name="ip-address" maxlength="15" size="15"></td>
+            <td>Port Number:</td>  <td><input type="text" name="port-number" maxlength="4" size="4"></td>
+          </tr>
+          <tr>
+            <td>            
+              <label>Sampling rate:</label>
+                <select id = "sampling-rate">
+                  <option value = "4">4 MHz</option>
+                  <option value = "8">8 MHz</option>
+                  <option value = "10">10 MHz</option>
+                  <option value = "20" selected="selected">20 MHz</option>
+                </select>
+            </td>
+
+            <td>            
+              <label>Sampling duration:</label>
+                <select id = "sampling-duration">
+                  <option value = "10" selected="selected">10 ms</option>
+                  <option value = "50">50 ms</option>
+                  <option value = "100">100 ms</option>
+                  <option value = "200">200 ms</option>
+                  <option value = "500">500 ms</option>
+                  <option value = "1000">1000 ms</option>
+                </select>
+            </td>
+
+            <td>            
+              <label>Hash function:</label>
+                <select id = "hash-function">
+                  <option value = "1">MD5</option>
+                  <option value = "2">SHA1</option>
+                  <option value = "3" selected="selected">SHA256</option>
+                </select>
+            </td>
+
+            <td>File name:</td> <td><input type="text" name="file-name"></td>
+          </tr>
+
+          <tr>
+            <td><div class="capture-button"><button>Capture data</button></div></td>
+          </tr>
+
+          <!-- <input type="file" id="ctrl" webkitdirectory directory/> -->
+  
+        </table>
+
+        </fieldset>
+      </form>
+    </div>
+
+    <div class="visualize-data">
+      <fieldset>
+        <legend>Captured Data</legend>
+
+          <table>
+            <tr>
+              <td>
+                <fieldset>
+                <legend>Waveform</legend>
+      
+                </fieldset>
+              </td>
+              <td>
+                <fieldset>
+                  <legend>FFT</legend>
+      
+                </fieldset>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <fieldset>
+                  <legend>Spectrogram</legend>
+        
+                </fieldset>
+              </td>
+            </tr>
+          </table>
+
+      </fieldset>
+    </div>
 
     <div id="footer">
     <br/>
