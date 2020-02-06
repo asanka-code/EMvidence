@@ -5,6 +5,7 @@ from flask import request
 import sys
 import io
 import random
+import time
 from flask import Response
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -71,8 +72,13 @@ def capture_data():
   hash_function = request.form['hash_function']
   file_name = request.form['file_name']
 
+  # a delay to emulate data capturing time
+  time.sleep(5)
+
+  # sending a response
   response = sdr + " " + ip_address + " " + port_number + " " + sampling_rate + " " + sampling_duration + " " + hash_function + " " + file_name
   return response
+
 
 ################################### Functions ######################################
 

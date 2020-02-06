@@ -27,6 +27,22 @@
         body {
           background-color:#ccddff;
         }
+        
+        #capture-progress {
+          visibility: hidden;
+        }
+
+        .ui-progressbar {
+          position: relative;
+          visibility: visible;
+        }
+        .progress-label {
+          position: absolute;
+          left: 50%;
+          top: 4px;
+          font-weight: bold;
+          text-shadow: 1px 1px 0 #fff;
+        }
       </style>
 
       <script>
@@ -64,63 +80,89 @@
         } );
 
         $( function() {
+          $( "#progressbar" ).progressbar({
+            value: true
+          });
+
+          progressLabel = $( ".progress-label" );
+          progressLabel.text("- Ready -");
+        } );
+
+        $( function() {
           $( ".capture-button button" ).button();
           $( ".capture-button button" ).click( function( event ) {
             event.preventDefault();
+            submitCaptureSettings();
 
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-              if (this.readyState == 4 && this.status == 200) {
-                // when received the response, enable the figures (waveform, spectrogram, FFT) below.                
-                alert(this.responseText);
-              }
-            };
-
-            // a form data object
-            var formData = new FormData();
-
-            // take the selected SDR device index
-            var sdr_choice = document.getElementById("sdr-device");
-            var sdr = sdr_choice.options[sdr_choice.selectedIndex].value;
-            // append sdr choice to the form data object
-            formData.append("sdr", sdr);
-
-            // take the ip address of the ZeroMQ client
-            var ip_address = document.getElementById("ip-address").value;
-            formData.append("ip_address", ip_address);
- 
-            // take the port number of the ZeroMQ client
-            var port_number = document.getElementById("port-number").value;
-            formData.append("port_number", port_number);
-
-            // take the selected sampling rate index
-            var sampling_rate = document.getElementById("sampling-rate");
-            sampling_rate = sampling_rate.options[sampling_rate.selectedIndex].value;
-            // append sampling rate choice to the form data object
-            formData.append("sampling_rate", sampling_rate);
-
-            // take the selected sampling duration index
-            var sampling_duration = document.getElementById("sampling-duration");
-            sampling_duration = sampling_duration.options[sampling_duration.selectedIndex].value;
-            // append sampling duration choice to the form data object
-            formData.append("sampling_duration", sampling_duration);
-
-            // take the selected hash function index
-            var hash_function = document.getElementById("hash-function");
-            hash_function = hash_function.options[hash_function.selectedIndex].value;
-            // append hash function choice to the form data object
-            formData.append("hash_function", hash_function);
-
-            // take the file name
-            var file_name = document.getElementById("file-name").value;
-            // append file name to the form data object
-            formData.append("file_name", file_name);
-
-            // send the AJAX request
-            xhttp.open("POST", "/capture-data", true);
-            xhttp.send(formData);
           } );
         } );
+
+        function submitCaptureSettings() {
+          // progress bar and its label objects
+          progressbar = $( "#progressbar" );
+          progressLabel = $( ".progress-label" );
+
+          // update the progress bar status
+          progressLabel.text("Data capture in progress...");
+          progressbar.progressbar( "value", false);
+
+          // a form data object
+          var formData = new FormData();
+
+          // take the selected SDR device index
+          var sdr_choice = document.getElementById("sdr-device");
+          var sdr = sdr_choice.options[sdr_choice.selectedIndex].value;
+          // append sdr choice to the form data object
+          formData.append("sdr", sdr);
+
+          // take the ip address of the ZeroMQ client
+          var ip_address = document.getElementById("ip-address").value;
+          formData.append("ip_address", ip_address);
+ 
+          // take the port number of the ZeroMQ client
+          var port_number = document.getElementById("port-number").value;
+          formData.append("port_number", port_number);
+
+          // take the selected sampling rate index
+          var sampling_rate = document.getElementById("sampling-rate");
+          sampling_rate = sampling_rate.options[sampling_rate.selectedIndex].value;
+          // append sampling rate choice to the form data object
+          formData.append("sampling_rate", sampling_rate);
+
+          // take the selected sampling duration index
+          var sampling_duration = document.getElementById("sampling-duration");
+          sampling_duration = sampling_duration.options[sampling_duration.selectedIndex].value;
+          // append sampling duration choice to the form data object
+          formData.append("sampling_duration", sampling_duration);
+
+          // take the selected hash function index
+          var hash_function = document.getElementById("hash-function");
+          hash_function = hash_function.options[hash_function.selectedIndex].value;
+          // append hash function choice to the form data object
+          formData.append("hash_function", hash_function);
+
+          // take the file name
+          var file_name = document.getElementById("file-name").value;
+          // append file name to the form data object
+          formData.append("file_name", file_name);
+
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              // update progress bar status
+              progressLabel.text("Done!");
+              var val = progressbar.progressbar( "value" ) || 0;
+              progressbar.progressbar( "value", true);
+              
+              // when received the response, enable the figures (waveform, spectrogram, FFT) below.
+              alert(this.responseText);
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/capture-data", true);
+          xhttp.send(formData);
+        }
       </script>
 
 
@@ -195,14 +237,15 @@
           <tr>
             <td><div class="capture-button"><button>Capture data</button></div></td>
           </tr>
-
-          <!-- <input type="file" id="ctrl" webkitdirectory directory/> -->
   
         </table>
 
         </fieldset>
       </form>
     </div>
+
+    <!-- progress bar to indicate the progress of data capture -->
+    <div id="progressbar"><div class="progress-label">This content will never be visible.</div></div>
 
     <div class="visualize-data">
       <fieldset>
