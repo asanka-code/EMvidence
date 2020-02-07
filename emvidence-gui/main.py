@@ -9,6 +9,7 @@ import time
 from flask import Response
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
+from emvincelib import iq, ml, stat
 
 app = Flask(__name__)
 
@@ -65,18 +66,27 @@ def plot():
 def capture_data():
   #return "Hello World!"
   sdr = request.form['sdr']
-  ip_address = request.form['ip_address']
-  port_number = request.form['port_number']
+  center_frequency = request.form['center_frequency']
+  #ip_address = request.form['ip_address']
+  #port_number = request.form['port_number']
   sampling_rate = request.form['sampling_rate']
   sampling_duration = request.form['sampling_duration']
   hash_function = request.form['hash_function']
   file_name = request.form['file_name']
 
   # a delay to emulate data capturing time
-  time.sleep(5)
+  #time.sleep(5)
+  # length of each I-Q trace
+  sampleDuration = 10 # 10 milliseconds
+  # path to the data directory
+  directoryPath = "./data/"
+  fileName = "temp-em-data"
+  zmqSocket = iq.startZMQClient(socketType="SUB")
+  iq.genSingleTraceFile(zmqSocket, directoryPath, fileName, windowSize=sampleDuration)
+  iq.stopZMQClient(zmqSocket)
 
   # sending a response
-  response = sdr + " " + ip_address + " " + port_number + " " + sampling_rate + " " + sampling_duration + " " + hash_function + " " + file_name
+  response = sdr + " " + center_frequency + " " + sampling_rate + " " + sampling_duration + " " + hash_function + " " + file_name
   return response
 
 
