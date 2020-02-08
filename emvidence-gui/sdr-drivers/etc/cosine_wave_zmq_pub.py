@@ -3,7 +3,7 @@
 ##################################################
 # GNU Radio Python Flow Graph
 # Title: Top Block
-# Generated: Fri Feb  7 21:28:30 2020
+# Generated: Fri Feb  7 21:45:07 2020
 ##################################################
 
 
@@ -40,6 +40,7 @@ class top_block(grc_wxgui.top_block_gui):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 20e6
+        self.center_freq = center_freq = 3e6
 
         ##################################################
         # Blocks
@@ -48,7 +49,7 @@ class top_block(grc_wxgui.top_block_gui):
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
         self.blocks_add_xx_0 = blocks.add_vcc(1)
         self.analog_sig_source_x_1 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, 5e6, 1, 0)
-        self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, 3e6, 1, 0)
+        self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, center_freq, 1, 0)
 
         ##################################################
         # Connections
@@ -66,6 +67,13 @@ class top_block(grc_wxgui.top_block_gui):
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
         self.analog_sig_source_x_1.set_sampling_freq(self.samp_rate)
         self.analog_sig_source_x_0.set_sampling_freq(self.samp_rate)
+
+    def get_center_freq(self):
+        return self.center_freq
+
+    def set_center_freq(self, center_freq):
+        self.center_freq = center_freq
+        self.analog_sig_source_x_0.set_frequency(self.center_freq)
 
 
 def main(top_block_cls=top_block, options=None):

@@ -11,6 +11,11 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from emvincelib import iq, ml, stat
 
+import os
+import signal
+import subprocess
+
+
 app = Flask(__name__)
 
 #-------------------------------------------------------------------------------
@@ -64,7 +69,8 @@ def plot():
 #-------------------------------------------------------------------------------
 @app.route("/capture-data", methods=['POST', 'GET'])
 def capture_data():
-  #return "Hello World!"
+  
+  # take the settings sent from the UI
   sdr = request.form['sdr']
   center_frequency = request.form['center_frequency']
   #ip_address = request.form['ip_address']
@@ -74,16 +80,21 @@ def capture_data():
   hash_function = request.form['hash_function']
   file_name = request.form['file_name']
 
-  # a delay to emulate data capturing time
-  #time.sleep(5)
-  # length of each I-Q trace
+  # start the grc script with the parameters
+  cmd = 'python2 ./sdr-drivers/sdr_driver.py hackrf 288000000 20000000'
+  pro = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
+
+  # length of the signal capture
   sampleDuration = 10 # 10 milliseconds
   # path to the data directory
   directoryPath = "./data/"
   fileName = "temp-em-data"
-  zmqSocket = iq.startZMQClient(socketType="SUB")
+  zmqSocket = iq.startZMQClient(tcpHostPort="tcp://127.0.0.1:5557", socketType="SUB")
   iq.genSingleTraceFile(zmqSocket, directoryPath, fileName, windowSize=sampleDuration)
   iq.stopZMQClient(zmqSocket)
+
+  # stop the grc script
+  os.killpg(os.getpgid(pro.pid), signal.SIGTERM)  # Send the signal to all the process groups
 
   # sending a response
   response = sdr + " " + center_frequency + " " + sampling_rate + " " + sampling_duration + " " + hash_function + " " + file_name
