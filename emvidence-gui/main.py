@@ -14,7 +14,12 @@ from emvincelib import iq, ml, stat
 import os
 import signal
 import subprocess
+import configparser
 
+
+# initialize the config file
+config = configparser.ConfigParser()
+config.read('emvidence.config')
 
 app = Flask(__name__)
 
@@ -96,8 +101,8 @@ def capture_data():
   # start the grc script with the parameters
   pro = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
 
-  # path to the data directory (later should be taken from the settings file)
-  directoryPath = "./data/"
+  # path to the data directory according to the config file
+  directoryPath = str(config['general-settings']['temp-data-directory'])
 
   # capture the data  
   zmqSocket = iq.startZMQClient(tcpHostPort="tcp://127.0.0.1:5557", socketType="SUB")
@@ -148,3 +153,5 @@ def is_passwd_correct(uname, passwd):
   
 if __name__ == "__main__":
   app.run()
+
+  
