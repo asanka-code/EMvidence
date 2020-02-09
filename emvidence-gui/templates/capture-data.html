@@ -32,6 +32,10 @@
           visibility: hidden;
         }
 
+        #visualize-data {
+          visibility: hidden;
+        }
+
         .ui-progressbar {
           position: relative;
           visibility: visible;
@@ -43,12 +47,21 @@
           font-weight: bold;
           text-shadow: 1px 1px 0 #fff;
         }
+
       </style>
 
       <script>
 
         $( function() {
           $( "#sdr-device" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#center-frequency-scale" ).selectmenu(
             {
               width: 200
             }
@@ -119,13 +132,11 @@
           var center_frequency = document.getElementById("center-frequency").value;
           formData.append("center_frequency", center_frequency);
 
-          // take the ip address of the ZeroMQ client
-          //var ip_address = document.getElementById("ip-address").value;
-          //formData.append("ip_address", ip_address);
- 
-          // take the port number of the ZeroMQ client
-          //var port_number = document.getElementById("port-number").value;
-          //formData.append("port_number", port_number);
+          // take the selected sampling rate index
+          var center_frequency_scale = document.getElementById("center-frequency-scale");
+          center_frequency_scale = center_frequency_scale.options[center_frequency_scale.selectedIndex].value;
+          // append sampling rate choice to the form data object
+          formData.append("center_frequency_scale", center_frequency_scale);
 
           // take the selected sampling rate index
           var sampling_rate = document.getElementById("sampling-rate");
@@ -153,13 +164,24 @@
           var xhttp = new XMLHttpRequest();
           xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-              // update progress bar status
-              progressLabel.text("Done!");
-              var val = progressbar.progressbar( "value" ) || 0;
-              progressbar.progressbar( "value", true);
-              
-              // when received the response, enable the figures (waveform, spectrogram, FFT) below.
-              alert(this.responseText);
+
+              if (this.responseText == "done") {
+                // update progress bar status
+                progressLabel.text("Done!");
+                var val = progressbar.progressbar( "value" ) || 0;
+                progressbar.progressbar( "value", true);
+
+                /// send a subsequent AJAX request to get the figures plotted and hash value in return
+                
+                // set the figures visible
+                document.getElementById("visualize-data").style.visibility = "visible";
+
+              } else {
+                // update progress bar status
+                progressLabel.text("Something went wrong...");
+                var val = progressbar.progressbar( "value" ) || 0;
+                progressbar.progressbar( "value", true);  
+              }
             }
           };
 
@@ -193,30 +215,32 @@
             <td>
               <label>SDR Device:</label>
               <select id = "sdr-device">
-                <option value = "1">RTL-SDR</option>
-                <option value = "2" selected="selected">HackRF One</option>
+                <option value = "rtlsdr">RTL-SDR</option>
+                <option value = "hackrf" selected="selected">HackRF One</option>
               </select>
             </td>
 
             <td>Center Frequency:</td>
             <td><input type="text" name="center-frequency" id="center-frequency" maxlength="8" size="8"></td>
+            <td>            
+              <label></label>
+                <select id = "center-frequency-scale">
+                  <option value = "H">Hz</option>
+                  <option value = "K">KHz</option>
+                  <option value = "M" selected="selected">MHz</option>
+                  <option value = "G">GHz</option>
+                </select>
+            </td>
           </tr>
-
-          <!--
-          <tr>
-            <td>ZeroMQ Server IP Address:</td> <td><input type="text" name="ip-address" id="ip-address" maxlength="15" size="15"></td>
-            <td>Port Number:</td>  <td><input type="text" name="port-number" id="port-number" maxlength="4" size="4"></td>
-          </tr>
-          -->
 
           <tr>
             <td>            
               <label>Sampling rate:</label>
                 <select id = "sampling-rate">
-                  <option value = "4">4 MHz</option>
-                  <option value = "8">8 MHz</option>
-                  <option value = "10">10 MHz</option>
-                  <option value = "20" selected="selected">20 MHz</option>
+                  <option value = "4000000">4 MHz</option>
+                  <option value = "8000000">8 MHz</option>
+                  <option value = "10000000">10 MHz</option>
+                  <option value = "20000000" selected="selected">20 MHz</option>
                 </select>
             </td>
 
@@ -235,9 +259,9 @@
             <td>            
               <label>Hash function:</label>
                 <select id = "hash-function">
-                  <option value = "1">MD5</option>
-                  <option value = "2">SHA1</option>
-                  <option value = "3" selected="selected">SHA256</option>
+                  <option value = "md5">MD5</option>
+                  <option value = "sha1">SHA1</option>
+                  <option value = "sha256" selected="selected">SHA256</option>
                 </select>
             </td>
 
@@ -257,7 +281,7 @@
     <!-- progress bar to indicate the progress of data capture -->
     <div id="progressbar"><div class="progress-label">This content will never be visible.</div></div>
 
-    <div class="visualize-data">
+    <div class="visualize-data" id="visualize-data">
       <fieldset>
         <legend>Captured Data</legend>
 

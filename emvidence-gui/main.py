@@ -73,32 +73,50 @@ def capture_data():
   # take the settings sent from the UI
   sdr = request.form['sdr']
   center_frequency = request.form['center_frequency']
-  #ip_address = request.form['ip_address']
-  #port_number = request.form['port_number']
+  center_frequency_scale = request.form['center_frequency_scale']
   sampling_rate = request.form['sampling_rate']
   sampling_duration = request.form['sampling_duration']
   hash_function = request.form['hash_function']
   file_name = request.form['file_name']
 
-  # start the grc script with the parameters
-  cmd = 'python2 ./sdr-drivers/sdr_driver.py hackrf 288000000 20000000'
-  pro = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
+  # convert the center frequency in the correct format 
+  center_frequency = int(center_frequency)
+  if center_frequency_scale == "H":
+    center_frequency = center_frequency
+  elif center_frequency_scale == "K":
+    center_frequency = center_frequency * 1000
+  elif center_frequency_scale == "M":
+    center_frequency = center_frequency * 1000000
+  elif center_frequency_scale == "G":
+    center_frequency = center_frequency * 1000000000
 
-  # length of the signal capture
-  sampleDuration = 10 # 10 milliseconds
-  # path to the data directory
+  # compose the command line arguments for the SDR driver
+  command = "python2 ./sdr-drivers/sdr_driver.py " + str(sdr) + " " + str(center_frequency) + " " + str(sampling_rate)
+
+  # start the grc script with the parameters
+  pro = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
+
+  # path to the data directory (later should be taken from the settings file)
   directoryPath = "./data/"
-  fileName = "temp-em-data"
+
+  # capture the data  
   zmqSocket = iq.startZMQClient(tcpHostPort="tcp://127.0.0.1:5557", socketType="SUB")
-  iq.genSingleTraceFile(zmqSocket, directoryPath, fileName, windowSize=sampleDuration)
+  iq.genSingleTraceFile(zmqSocket, directoryPath, str(file_name), windowSize=int(sampling_duration))
   iq.stopZMQClient(zmqSocket)
 
   # stop the grc script
   os.killpg(os.getpgid(pro.pid), signal.SIGTERM)  # Send the signal to all the process groups
 
+  # calculate hash value of the EM data file and put in the database
+  if hash_function == "md5":
+    pass
+  elif hash_function == "sha1":
+    pass
+  elif hash_function == "sha256":
+    pass
+
   # sending a response
-  response = sdr + " " + center_frequency + " " + sampling_rate + " " + sampling_duration + " " + hash_function + " " + file_name
-  return response
+  return "done"
 
 
 ################################### Functions ######################################
