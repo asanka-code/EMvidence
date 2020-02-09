@@ -220,16 +220,15 @@
               </select>
             </td>
 
-            <td>Center Frequency:</td>
-            <td><input type="text" name="center-frequency" id="center-frequency" maxlength="8" size="8"></td>
-            <td>            
-              <label></label>
-                <select id = "center-frequency-scale">
-                  <option value = "H">Hz</option>
-                  <option value = "K">KHz</option>
-                  <option value = "M" selected="selected">MHz</option>
-                  <option value = "G">GHz</option>
-                </select>
+            <td>
+            Center Frequency:<input type="text" name="center-frequency" id="center-frequency" maxlength="8" size="8">
+            <label></label>
+              <select id = "center-frequency-scale">
+                <option value = "H">Hz</option>
+                <option value = "K">KHz</option>
+                <option value = "M" selected="selected">MHz</option>
+                <option value = "G">GHz</option>
+              </select>
             </td>
           </tr>
 
@@ -255,7 +254,9 @@
                   <option value = "1000">1000 ms</option>
                 </select>
             </td>
+          </tr>
 
+          <tr>
             <td>            
               <label>Hash function:</label>
                 <select id = "hash-function">
@@ -265,11 +266,7 @@
                 </select>
             </td>
 
-            <td>File name:</td> <td><input type="text" name="file-name" id="file-name"></td>
-          </tr>
-
-          <tr>
-            <td><div class="capture-button"><button>Capture data</button></div></td>
+            <td>File name:<input type="text" name="file-name" id="file-name"></td>
           </tr>
   
         </table>
@@ -277,6 +274,12 @@
         </fieldset>
       </form>
     </div>
+
+    <table>
+      <tr>
+        <td><div class="capture-button"><button>Capture data</button></div></td>
+      </tr>
+    </table>
 
     <!-- progress bar to indicate the progress of data capture -->
     <div id="progressbar"><div class="progress-label">This content will never be visible.</div></div>
