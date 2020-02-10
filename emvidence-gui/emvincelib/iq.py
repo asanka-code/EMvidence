@@ -284,7 +284,7 @@ def getSegmentData(cFileName, offsetTime, windowTime):
 ###############################################################################
 
 
-def plotWaveform(data, show=1):
+def plotWaveform(data, show=1, file_name='./wavform.pdf', file_format='pdf'):
     """
     Given a data set as a complex numpy array, this function returns the waveform plot.
     """
@@ -299,7 +299,7 @@ def plotWaveform(data, show=1):
         plt.show()
     else:
         # Save the waveform into a PDF file
-        plt.savefig('./wavform.pdf', fotmat='pdf', bbox_inches='tight')
+        plt.savefig(file_name, fotmat=file_format, bbox_inches='tight')
         
     return 1
 
@@ -320,8 +320,7 @@ def plotScatter(data, show=1):
         
     return 1
 
-
-def plotPSD(data, show=1):
+def plotPSD(data, show=1, file_name='./psd.pdf', file_format='pdf'):
     """
     Given a data set as a complex numpy array, this function returns the power spectral density (PSD) plot.
     """
@@ -333,7 +332,8 @@ def plotPSD(data, show=1):
         plt.show()
     else:
         # save the PSD plot into a PDF file
-        plt.savefig('./psd.pdf', fotmat='pdf', bbox_inches='tight')
+        plt.savefig(file_name, fotmat=file_format, bbox_inches='tight')
+
     return 1
 
     
@@ -371,10 +371,13 @@ def plotFFT(data, show=1):
     return 1
 
 
-def plotSpectrogram(data, show=1):
+def plotSpectrogram(data, show=1, file_name='./spectrogram.pdf', file_format='pdf'):
     """
     Given a data set as a complex numpy array, this function returns the spectrogram plot.
     """
+
+    plt.figure()
+    
     # plot the spectrogram of the selected sample range
     #plt.specgram(data, NFFT=4096, Fs=sampleRate, cmap=plt.cm.get_cmap("Greys"))
     plt.specgram(data, NFFT=4096, Fs=sampleRate)
@@ -393,7 +396,7 @@ def plotSpectrogram(data, show=1):
         plt.show()
     else:
         # save the spectrogram into a PDF file.
-        plt.savefig('./spectrogram.pdf', fotmat='pdf', bbox_inches='tight', pad_inches=0)
+        plt.savefig(file_name, fotmat=file_format, bbox_inches='tight', pad_inches=0)
         #plt.savefig('spectrogram-from-iq.pdf', fotmat='pdf', bbox_inches='tight')
         
     return 1

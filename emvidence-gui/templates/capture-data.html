@@ -170,11 +170,13 @@
                 progressLabel.text("Done!");
                 var val = progressbar.progressbar( "value" ) || 0;
                 progressbar.progressbar( "value", true);
-
-                /// send a subsequent AJAX request to get the figures plotted and hash value in return
                 
                 // set the figures visible
                 document.getElementById("visualize-data").style.visibility = "visible";
+
+                // realoading the iframe to show the graphs of the captured data
+                var iframe = document.getElementById('captured-data-view');
+                iframe.src = iframe.src;
 
               } else {
                 // update progress bar status
@@ -190,8 +192,6 @@
           xhttp.send(formData);
         }
       </script>
-
-
 
 
 
@@ -285,36 +285,7 @@
     <div id="progressbar"><div class="progress-label">This content will never be visible.</div></div>
 
     <div class="visualize-data" id="visualize-data">
-      <fieldset>
-        <legend>Captured Data</legend>
-
-          <table>
-            <tr>
-              <td>
-                <fieldset>
-                <legend>Waveform</legend>
-      
-                </fieldset>
-              </td>
-              <td>
-                <fieldset>
-                  <legend>FFT</legend>
-      
-                </fieldset>
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <fieldset>
-                  <legend>Spectrogram</legend>
-        
-                </fieldset>
-              </td>
-            </tr>
-          </table>
-
-      </fieldset>
+      <iframe src="/captured_data_view" style="border:none;", name="captured-data-view", id="captured-data-view", width="100%", height="100%"></iframe>
     </div>
 
     <div id="footer">
