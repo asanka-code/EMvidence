@@ -47,8 +47,8 @@
           $( ".save-button button" ).button();
           $( ".save-button button" ).click( function( event ) {
             event.preventDefault();
-            // do whatever the thing that has to be done here.
-
+            // submit the data to the backend
+            saveSettings();
           } );
         } );
 
@@ -105,8 +105,7 @@
         function setEMdataFormat() {
           var xhttp = new XMLHttpRequest();
           xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-              //document.getElementById("em-data-format").options[1].selected=true;
+            if (this.readyState == 4 && this.status == 200) {              
               $("#em-data-format").val(this.responseText);
               $( "#em-data-format" ).selectmenu("refresh", true);
             }
@@ -116,7 +115,38 @@
           xhttp.send();
         }
         
-        
+        function saveSettings() {            
+          // a form data object
+          var formData = new FormData();
+
+          // take the default capture directory
+          var capture_directory = document.getElementById("default-capture-directory").value;          
+          // append the default capture directory to form data object
+          formData.append("capture_directory", capture_directory);
+
+          // take the selected em data format index
+          var em_data_format = document.getElementById("em-data-format");
+          em_data_format = em_data_format.options[em_data_format.selectedIndex].value;
+          // append sampling rate choice to the form data object
+          formData.append("em_data_format", em_data_format);
+
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              if (this.responseText == "done") {                          
+                // set the figures visible
+                //document.getElementById("visualize-data").style.visibility = "visible";
+                alert("Settings saved");
+              } else {
+                alert("Error occured while saving");
+              }
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/save_settings", true);
+          xhttp.send(formData);
+        }        
 
       </script>
 

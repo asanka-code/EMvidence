@@ -196,6 +196,26 @@ def get_em_data_format():
   config.read(config_file_name)
   return str(config['general-settings']['em-data-format'])
 
+
+#-------------------------------------------------------------------------------
+@app.route("/save_settings", methods=['POST', 'GET'])
+def save_settings():
+  # take the settings values
+  capture_directory = request.form['capture_directory']
+  em_data_format = request.form['em_data_format']
+
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
+
+  config['general-settings']['temp-data-directory'] = str(capture_directory)
+  config['general-settings']['em-data-format'] = str(em_data_format)
+
+  # save new settings to the config file
+  with open(config_file_name, 'w') as configfile:
+    config.write(configfile)
+    
+  return "done"
+
 ################################### Functions ######################################
 
 
