@@ -25,6 +25,129 @@
         }
       </style>
 
+      <script>
+
+        $( function() {
+          $( "#em-data-format" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#select-module-to-delete" ).selectmenu(
+            {
+              width: 400
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#checkbox-1" ).checkboxradio(
+            {
+              icon: false
+            });
+
+          $( "#checkbox-2" ).checkboxradio(
+            {
+              icon: false
+            });
+          
+          $( "#checkbox-3" ).checkboxradio(
+            {
+              icon: false
+            });
+
+          $( "#checkbox-4" ).checkboxradio(
+            {
+              icon: false
+            });
+
+          $( "#checkbox-5" ).checkboxradio(
+            {
+              icon: false
+            });
+
+        } );
+
+        $( function() {
+          $( ".save-button button" ).button();
+          $( ".save-button button" ).click( function( event ) {
+            event.preventDefault();
+            // do whatever the thing that has to be done here.
+
+          } );
+        } );
+
+        $( function() {
+          $( ".cancel-button button" ).button();
+          $( ".cancel-button button" ).click( function( event ) {
+            event.preventDefault();
+            window.location.href = "/settings";
+          } );
+        } );
+
+        $( function() {
+          $( ".widget input[type=submit]" ).button();
+          $( ".widget input[type=file]" ).button();
+          $( ".widget input[type=button]" ).button();
+          $( "#cancel-upload" ).click( function( event ) {
+            event.preventDefault();
+            window.location.href = "/settings";
+          } );
+        } );
+
+        $( function() {          
+          $( ".module-delete-widget input[type=button]" ).button();
+          $( "#delete-module" ).click( function( event ) {
+            event.preventDefault();
+            // send the module deletion AJAX request
+          } );
+
+          $( "#cancel-delete" ).click( function( event ) {
+            event.preventDefault();
+            window.location.href = "/settings";            
+          } );
+        } );
+
+        $(document).ready( function() {
+          // fill the default directory field
+          fillDefaultDirectory();
+          // set the EM data format
+          setEMdataFormat();
+        } );
+                
+        function fillDefaultDirectory() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              $("#default-capture-directory").val(this.responseText);              
+            }
+          };
+          // send the AJAX request
+          xhttp.open("POST", "/get_default_directory", true);
+          xhttp.send();
+        }
+  
+        function setEMdataFormat() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              //document.getElementById("em-data-format").options[1].selected=true;
+              $("#em-data-format").val(this.responseText);
+              $( "#em-data-format" ).selectmenu("refresh", true);
+            }
+          };
+          // send the AJAX request
+          xhttp.open("POST", "/get_em_data_format", true);
+          xhttp.send();
+        }
+        
+        
+
+      </script>
+
     <title>EMvidence Side-Channel Investigator</title>
     </head>
   
@@ -33,7 +156,92 @@
     <!-- the main toolbar-->
     {% include 'main-toolbar.html' %}
 
-    Analyse data page is here...
+
+    <div class="emvidence-settings">
+      <form action="/" method="POST">
+        <fieldset>
+        <legend>General Settings</legend>
+        <table>
+          <tr>
+            <td>Default directory to save EM data:<input type="text" name="default-capture-directory" id="default-capture-directory"></td>
+          </tr>
+          <tr>
+            <td>
+              <label>Default EM data file format:</label>              
+              <select name="em-data-format" id="em-data-format">
+                <option value="npy">NumPy format</option>
+                <option value="cfile">cFile format</option>
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <legend>Enabled modules: </legend>
+              <label for="checkbox-1">Arduino Activity Detection</label>
+              <input type="checkbox" name="checkbox-1" id="checkbox-1">
+
+              <label for="checkbox-2">Arduino Modification Detection</label>
+              <input type="checkbox" name="checkbox-2" id="checkbox-2">
+              
+              <label for="checkbox-3">Raspberry Pi Cryptography Detection</label>
+              <input type="checkbox" name="checkbox-3" id="checkbox-3">
+              
+              <label for="checkbox-4">Another Module</label>
+              <input type="checkbox" name="checkbox-4" id="checkbox-4">
+            </td>
+          </tr>
+          
+        </table>
+
+        <table>
+          <tr>
+            <td><div class="save-button"><button>Save</button></div></td>
+            <td><div class="cancel-button"><button>Cancel</button></div></td>
+          </tr>
+        </table>
+
+        </fieldset>
+      </form>
+    </div>
+
+    <form action="/add-module" method="post" enctype="multipart/form-data">
+      <fieldset>
+        <legend>Module Settings</legend>
+        <table>
+          <tr>
+            <td>
+            Select module ZIP file to upload:
+            <div class="widget">
+              <input type="file" name="fileToUpload" id="fileToUpload">
+              <input type="submit" value="Upload ZIP" name="submit">
+              <input type="button" value="Cancel" name="cancel-upload" id="cancel-upload">
+            </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <label>Select a module to delete:</label>
+              <select id = "select-module-to-delete">
+                <option disabled selected>Please pick a module</option>
+                <option value = "module-id-1">Arduino Activity Detection</option>
+                <option value = "module-id-2">Arduino Modification Detection</option>
+                <option value = "module-id-3">Raspberry Pi Cryptography Detection</option>
+                <option value = "module-id-4">Another Module</option>
+              </select>
+            </td>
+            <td>
+              <div class="module-delete-widget">
+                <input type="button" value="Delete" name="delete-module" id="delete-module">
+                <input type="button" value="Cancel" name="cancel-delete" id="cancel-delete">
+              </div>
+            </td>
+          </tr>
+      </table>
+      </fieldset>
+    </form>
+
 
     <div id="footer">
     <br/>

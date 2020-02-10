@@ -44,34 +44,6 @@
         } );
 
         $( function() {
-          $( "#checkbox-1" ).checkboxradio(
-            {
-              icon: false
-            });
-
-          $( "#checkbox-2" ).checkboxradio(
-            {
-              icon: false
-            });
-          
-          $( "#checkbox-3" ).checkboxradio(
-            {
-              icon: false
-            });
-
-          $( "#checkbox-4" ).checkboxradio(
-            {
-              icon: false
-            });
-
-          $( "#checkbox-5" ).checkboxradio(
-            {
-              icon: false
-            });
-
-        } );
-
-        $( function() {
           $( ".save-button button" ).button();
           $( ".save-button button" ).click( function( event ) {
             event.preventDefault();
@@ -107,9 +79,44 @@
 
           $( "#cancel-delete" ).click( function( event ) {
             event.preventDefault();
-            window.location.href = "/settings";
+            window.location.href = "/settings";            
           } );
         } );
+
+        $(document).ready( function() {
+          // fill the default directory field
+          fillDefaultDirectory();
+          // set the EM data format
+          setEMdataFormat();
+        } );
+                
+        function fillDefaultDirectory() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              $("#default-capture-directory").val(this.responseText);              
+            }
+          };
+          // send the AJAX request
+          xhttp.open("POST", "/get_default_directory", true);
+          xhttp.send();
+        }
+  
+        function setEMdataFormat() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              //document.getElementById("em-data-format").options[1].selected=true;
+              $("#em-data-format").val(this.responseText);
+              $( "#em-data-format" ).selectmenu("refresh", true);
+            }
+          };
+          // send the AJAX request
+          xhttp.open("POST", "/get_em_data_format", true);
+          xhttp.send();
+        }
+        
+        
 
       </script>
 
@@ -132,31 +139,13 @@
           </tr>
           <tr>
             <td>
-              <label>Default EM data file format:</label>
-              <select id = "em-data-format">
-                <option value = "npy" selected="selected">NumPy format</option>
-                <option value = "cfile">cFile format</option>
+              <label>Default EM data file format:</label>              
+              <select name="em-data-format" id="em-data-format">
+                <option value="npy">NumPy format</option>
+                <option value="cfile">cFile format</option>
               </select>
             </td>
-          </tr>
-
-          <tr>
-            <td>
-              <legend>Enabled modules: </legend>
-              <label for="checkbox-1">Arduino Activity Detection</label>
-              <input type="checkbox" name="checkbox-1" id="checkbox-1">
-
-              <label for="checkbox-2">Arduino Modification Detection</label>
-              <input type="checkbox" name="checkbox-2" id="checkbox-2">
-              
-              <label for="checkbox-3">Raspberry Pi Cryptography Detection</label>
-              <input type="checkbox" name="checkbox-3" id="checkbox-3">
-              
-              <label for="checkbox-4">Another Module</label>
-              <input type="checkbox" name="checkbox-4" id="checkbox-4">
-            </td>
-          </tr>
-          
+          </tr>          
         </table>
 
         <table>

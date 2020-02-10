@@ -181,6 +181,21 @@ def get_spectrogram():
   return send_file('./data/temp-spectrogram-graph.png', mimetype='image/png')
 
 
+#-------------------------------------------------------------------------------
+@app.route("/get_default_directory", methods=['POST', 'GET'])
+def get_settings_information():
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
+  return str(config['general-settings']['temp-data-directory'])
+
+
+#-------------------------------------------------------------------------------
+@app.route("/get_em_data_format", methods=['POST', 'GET'])
+def get_em_data_format():
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
+  return str(config['general-settings']['em-data-format'])
+
 ################################### Functions ######################################
 
 
