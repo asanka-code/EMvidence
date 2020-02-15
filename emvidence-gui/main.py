@@ -2,6 +2,7 @@ from flask import Flask
 from flask import render_template
 from flask import request
 from flask import send_file
+from flask import jsonify, make_response
 
 import sys
 import io
@@ -215,6 +216,100 @@ def save_settings():
     config.write(configfile)
     
   return "done"
+
+#-------------------------------------------------------------------------------
+@app.route("/analyze-data", methods=['POST', 'GET'])
+def analze_data():
+  
+  # take the choices made by the user
+  dataset_choice = request.form['dataset_choice']
+  iot_device_type = request.form['iot_device_type']
+
+  # take the selected module ids as a string
+  selected_modules = request.form['selected_modules']
+  # split the module id string into individual id elements in an array
+  selected_modules = selected_modules.split(',')
+
+  time.sleep(2)
+
+  print("IMPORTANT: " + dataset_choice + " " + iot_device_type)
+  print(selected_modules)
+
+  return "done"
+
+
+#-------------------------------------------------------------------------------
+@app.route("/cancel-analysis", methods=['POST', 'GET'])
+def cancel_analysis():
+  return "done"
+
+
+#-------------------------------------------------------------------------------
+@app.route("/get_dataset_list", methods=['POST', 'GET'])
+def get_dataset_list():
+  
+  response_body = {
+    "length" : 2,
+    "1" : {
+      "value" : "1",
+      "text" : "Arduino case data"
+    },
+    "2" : {
+      "value" : "2",
+      "text" : "RaspberryPi case data"
+    }
+  }
+  
+  res = make_response(jsonify(response_body), 200)
+  return res
+
+
+#-------------------------------------------------------------------------------
+@app.route("/get_iot_device_list", methods=['POST', 'GET'])
+def get_iot_device_list():
+
+  response_body = {
+    "length" : 2,
+    "1" : {
+      "value" : "1",
+      "text" : "Arduino Leonardo"
+    },
+    "2" : {
+      "value" : "2",
+      "text" : "RaspberryPi 3B+"
+    }
+  }
+  
+  res = make_response(jsonify(response_body), 200)
+  return res
+
+
+#-------------------------------------------------------------------------------
+@app.route("/get_modules_list", methods=['POST', 'GET'])
+def get_modules_list():
+
+  response_body = {
+    "length" : 4,
+    "1" : {
+      "module_id" : "4001",
+      "module_name" : "Arduino Activity Detection"
+    },
+    "2" : {
+      "module_id" : "4002",
+      "module_name" : "Arduino Modification Detection"
+    },
+    "3" : {
+      "module_id" : "4003",
+      "module_name" : "Raspberry Pi Cryptography Detection"
+    },
+    "4" : {
+      "module_id" : "4004",
+      "module_name" : "Raspberry Pi Modification Detection"
+    }
+  }
+  
+  res = make_response(jsonify(response_body), 200)
+  return res
 
 ################################### Functions ######################################
 

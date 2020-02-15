@@ -12,9 +12,6 @@
           width: 200px;
           vertical-align: top;
         }
-        #modules-button {
-          width: 60;
-        }
         td {
           align-self: auto;
         }
@@ -23,12 +20,28 @@
           bottom: 0; 
           width: 100%;
         }
+
+        #visualize-data {
+          visibility: hidden;
+        }
+
+        .ui-progressbar {
+          position: relative;
+          visibility: visible;
+        }
+        .progress-label {
+          position: absolute;
+          left: 50%;
+          top: 4px;
+          font-weight: bold;
+          text-shadow: 1px 1px 0 #fff;
+        }
       </style>
 
       <script>
 
         $( function() {
-          $( "#em-data-format" ).selectmenu(
+          $( "#iot-device-type" ).selectmenu(
             {
               width: 200
             }
@@ -36,115 +49,270 @@
         } );
 
         $( function() {
-          $( "#select-module-to-delete" ).selectmenu(
+          $( "#dataset" ).selectmenu(
             {
-              width: 400
+              width: 200
             }
           );
         } );
 
         $( function() {
-          $( "#checkbox-1" ).checkboxradio(
-            {
-              icon: false
-            });
+          $( "#progressbar" ).progressbar({
+            value: true
+          });
 
-          $( "#checkbox-2" ).checkboxradio(
-            {
-              icon: false
-            });
-          
-          $( "#checkbox-3" ).checkboxradio(
-            {
-              icon: false
-            });
-
-          $( "#checkbox-4" ).checkboxradio(
-            {
-              icon: false
-            });
-
-          $( "#checkbox-5" ).checkboxradio(
-            {
-              icon: false
-            });
-
+          progressLabel = $( ".progress-label" );
+          progressLabel.text("- Ready -");
         } );
 
         $( function() {
-          $( ".save-button button" ).button();
-          $( ".save-button button" ).click( function( event ) {
+          $( ".analyze-button button" ).button();
+          $( ".analyze-button button" ).click( function( event ) {
             event.preventDefault();
-            // do whatever the thing that has to be done here.
+            submitAnalysis();
 
           } );
         } );
 
         $( function() {
-          $( ".cancel-button button" ).button();
-          $( ".cancel-button button" ).click( function( event ) {
+          $( ".cancel-analyze-button button" ).button();
+          $( ".cancel-analyze-button button" ).click( function( event ) {
             event.preventDefault();
-            window.location.href = "/settings";
+            cancelAnalysis();
           } );
         } );
+      
+        function submitAnalysis() {
+          // progress bar and its label objects
+          progressbar = $( "#progressbar" );
+          progressLabel = $( ".progress-label" );
+
+          // update the progress bar status
+          progressLabel.text("Data analysis in progress...");
+          progressbar.progressbar( "value", false);
+
+          // a form data object
+          var formData = new FormData();
+
+          // take the selection of dataset
+          var dataset_choice = document.getElementById("dataset");
+          dataset_choice = dataset_choice.options[dataset_choice.selectedIndex].value;
+          // append the choice of dataset to the form data object
+          formData.append("dataset_choice", dataset_choice);
+
+          // take the selection of IoT device
+          var iot_device_type = document.getElementById("iot-device-type");
+          iot_device_type = iot_device_type.options[iot_device_type.selectedIndex].value;
+          // append the choice of IoT device to the form data object
+          formData.append("iot_device_type", iot_device_type);                    
+
+          // append the choice of modules to the form data object
+          formData.append("selected_modules", checked_elements);
+
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+              if (this.responseText == "done") {
+                
+                // update progress bar status
+                progressLabel.text("Done!");
+                var val = progressbar.progressbar( "value" ) || 0;
+                progressbar.progressbar( "value", true);
+                
+                // set the figures visible
+                document.getElementById("visualize-data").style.visibility = "visible";
+
+                // realoading the iframe to show the results of the analysis
+                var iframe = document.getElementById('captured-data-view');
+                iframe.src = iframe.src;
+
+              } else {
+                // update progress bar status
+                progressLabel.text("Something went wrong...");
+                var val = progressbar.progressbar( "value" ) || 0;
+                progressbar.progressbar( "value", true);  
+              }
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/analyze-data", true);
+          xhttp.send(formData);
+        }
+
+        function cancelAnalysis() {
+          // progress bar and its label objects
+          progressbar = $( "#progressbar" );
+          progressLabel = $( ".progress-label" );
+
+          // a form data object
+          var formData = new FormData();
+
+          var temp = 'temp';
+          formData.append("temp", temp);
+
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+              if (this.responseText == "done") {
+                // update progress bar status
+                progressLabel.text("Analysis canceled!");
+                var val = progressbar.progressbar( "value" ) || 0;
+                progressbar.progressbar( "value", true);
+                
+                // set the figures visible
+                document.getElementById("visualize-data").style.visibility = "hidden";
+
+                // realoading the iframe to show the results of the analysis
+                var iframe = document.getElementById('captured-data-view');
+                iframe.src = iframe.src;
+
+              } else {
+                // update progress bar status
+                progressLabel.text("Something went wrong...");
+                var val = progressbar.progressbar( "value" ) || 0;
+                progressbar.progressbar( "value", true);  
+              }
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/cancel-analysis", true);
+          xhttp.send(formData);
+        }
 
         $( function() {
           $( ".widget input[type=submit]" ).button();
           $( ".widget input[type=file]" ).button();
           $( ".widget input[type=button]" ).button();
-          $( "#cancel-upload" ).click( function( event ) {
-            event.preventDefault();
-            window.location.href = "/settings";
-          } );
         } );
 
-        $( function() {          
-          $( ".module-delete-widget input[type=button]" ).button();
-          $( "#delete-module" ).click( function( event ) {
-            event.preventDefault();
-            // send the module deletion AJAX request
-          } );
+        // things to do once the document is loaded
+        $(document).ready( function() {          
+          // set the dataset selection menu
+          setDatasetSelectionList();
 
-          $( "#cancel-delete" ).click( function( event ) {
-            event.preventDefault();
-            window.location.href = "/settings";            
-          } );
-        } );
+          // set the IoT devices selection menu
+          setIoTDeviceSelectionList();
 
-        $(document).ready( function() {
-          // fill the default directory field
-          fillDefaultDirectory();
-          // set the EM data format
-          setEMdataFormat();
-        } );
-                
-        function fillDefaultDirectory() {
-          var xhttp = new XMLHttpRequest();
-          xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-              $("#default-capture-directory").val(this.responseText);              
-            }
-          };
-          // send the AJAX request
-          xhttp.open("POST", "/get_default_directory", true);
-          xhttp.send();
-        }
+          // set the modules as checkbox elements
+          setModulesCheckboxList();
+
+        } );              
   
-        function setEMdataFormat() {
+        function setDatasetSelectionList() {
           var xhttp = new XMLHttpRequest();
           xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-              //document.getElementById("em-data-format").options[1].selected=true;
-              $("#em-data-format").val(this.responseText);
-              $( "#em-data-format" ).selectmenu("refresh", true);
+
+              // take the received JSON object
+              var response = JSON.parse(this.response);
+              
+              // take the number of IoT devices
+              var len = parseInt(response["length"]);
+
+              // process each IoT device
+              for (var i=1; i<=len; i++) {          
+                // add the option to the select menu
+                $('#dataset').append($('<option>', {
+                  value: response[i.toString()]["value"],
+                  text: response[i.toString()]["text"]
+                }));
+              }
+              
+              // refresh the select menu to make the newly added options visible
+              $( "#dataset" ).selectmenu("refresh", true);
             }
           };
           // send the AJAX request
-          xhttp.open("POST", "/get_em_data_format", true);
+          xhttp.open("POST", "/get_dataset_list", true);
+          xhttp.send();
+        }
+
+        function setIoTDeviceSelectionList() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+              // take the received JSON object
+              var response = JSON.parse(this.response);
+              
+              // take the number of IoT devices
+              var len = parseInt(response["length"]);
+
+              // process each IoT device
+              for (var i=1; i<=len; i++) {          
+                // add the option to the select menu
+                $('#iot-device-type').append($('<option>', {
+                  value: response[i.toString()]["value"],
+                  text: response[i.toString()]["text"]
+                }));
+              }
+              
+              // refresh the select menu to make the newly added options visible
+              $( "#iot-device-type" ).selectmenu("refresh", true);
+            }
+          };
+          // send the AJAX request
+          xhttp.open("POST", "/get_iot_device_list", true);
           xhttp.send();
         }
         
-        
+        function setModulesCheckboxList() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              
+              // take the received JSON object
+              var response = JSON.parse(this.response);
+              
+              // take the number of modules
+              var len = parseInt(response["length"]);
+
+              // process each module
+              for (var i=1; i<=len; i++) {        
+
+                // take the module ID
+                var module_id = response[i.toString()]["module_id"]
+                // set the new module label
+                $('#modules-to-apply').append($('<label>', {
+                  for: module_id,
+                  text: response[i.toString()]["module_name"]            
+                }));
+                // set the input checkbox for this module
+                $('#modules-to-apply').append($('<input>', {
+                  type: "checkbox",
+                  name: module_id,
+                  id: module_id,
+                  onclick: "recordCheckBox(this)"
+                }));
+                $( "#" + module_id ).checkboxradio(
+                {
+                  icon: false
+                });
+              }                            
+            }
+          };
+          // send the AJAX request
+          xhttp.open("POST", "/get_modules_list", true);
+          xhttp.send();
+        }
+
+        // the array that holds the module ids of checked checkerboxes
+        var checked_elements = [];
+
+
+        function recordCheckBox(element) {
+          var checkBox = element;
+          if (checkBox.checked == true){
+	          checked_elements.push(checkBox.id);
+          } else {
+            var filteredAry = checked_elements.filter(function(e) { return e !== checkBox.id });
+            checked_elements = filteredAry;
+          }          
+        }
 
       </script>
 
@@ -160,87 +328,55 @@
     <div class="emvidence-settings">
       <form action="/" method="POST">
         <fieldset>
-        <legend>General Settings</legend>
+        <legend>Configure Analysis</legend>
         <table>
-          <tr>
-            <td>Default directory to save EM data:<input type="text" name="default-capture-directory" id="default-capture-directory"></td>
-          </tr>
+
           <tr>
             <td>
-              <label>Default EM data file format:</label>              
-              <select name="em-data-format" id="em-data-format">
-                <option value="npy">NumPy format</option>
-                <option value="cfile">cFile format</option>
+              <label>Dataset to analyse:</label>              
+              <select name="dataset" id="dataset">
+                <option value="select-dataset" selected="true" disabled="disabled">Select the dataset</option>
               </select>
             </td>
           </tr>
 
           <tr>
             <td>
-              <legend>Enabled modules: </legend>
-              <label for="checkbox-1">Arduino Activity Detection</label>
-              <input type="checkbox" name="checkbox-1" id="checkbox-1">
+              <label>IoT device:</label>              
+              <select name="iot-device-type" id="iot-device-type">
+                <option value="select-device" selected="true" disabled="disabled">Select IoT Device</option>
+                <!-- <option value="arduino-leonardo">Arduino Leonardo</option> -->
+                <!-- <option value="raspberry-pi-3-b+">RaspberryPi 3B+</option> -->
+              </select>
+            </td>
+          </tr>
 
-              <label for="checkbox-2">Arduino Modification Detection</label>
-              <input type="checkbox" name="checkbox-2" id="checkbox-2">
-              
-              <label for="checkbox-3">Raspberry Pi Cryptography Detection</label>
-              <input type="checkbox" name="checkbox-3" id="checkbox-3">
-              
-              <label for="checkbox-4">Another Module</label>
-              <input type="checkbox" name="checkbox-4" id="checkbox-4">
+          <tr>
+            <td>
+              <legend>Modules to apply: </legend>
+              <div id="modules-to-apply"></div>
             </td>
           </tr>
           
-        </table>
-
-        <table>
-          <tr>
-            <td><div class="save-button"><button>Save</button></div></td>
-            <td><div class="cancel-button"><button>Cancel</button></div></td>
-          </tr>
         </table>
 
         </fieldset>
       </form>
     </div>
 
-    <form action="/add-module" method="post" enctype="multipart/form-data">
-      <fieldset>
-        <legend>Module Settings</legend>
-        <table>
-          <tr>
-            <td>
-            Select module ZIP file to upload:
-            <div class="widget">
-              <input type="file" name="fileToUpload" id="fileToUpload">
-              <input type="submit" value="Upload ZIP" name="submit">
-              <input type="button" value="Cancel" name="cancel-upload" id="cancel-upload">
-            </div>
-            </td>
-          </tr>
+    <table>
+      <tr>
+        <td><div class="analyze-button"><button>Start analysis</button></div></td>
+        <td><div class="cancel-analyze-button"><button>Cancel analysis</button></div></td>
+      </tr>
+    </table>
 
-          <tr>
-            <td>
-              <label>Select a module to delete:</label>
-              <select id = "select-module-to-delete">
-                <option disabled selected>Please pick a module</option>
-                <option value = "module-id-1">Arduino Activity Detection</option>
-                <option value = "module-id-2">Arduino Modification Detection</option>
-                <option value = "module-id-3">Raspberry Pi Cryptography Detection</option>
-                <option value = "module-id-4">Another Module</option>
-              </select>
-            </td>
-            <td>
-              <div class="module-delete-widget">
-                <input type="button" value="Delete" name="delete-module" id="delete-module">
-                <input type="button" value="Cancel" name="cancel-delete" id="cancel-delete">
-              </div>
-            </td>
-          </tr>
-      </table>
-      </fieldset>
-    </form>
+    <!-- progress bar to indicate the progress of data capture -->
+    <div id="progressbar"><div class="progress-label">This content will never be visible.</div></div>
+
+    <div class="visualize-data" id="visualize-data">
+      <iframe src="/captured_data_view" style="border:none;", name="captured-data-view", id="captured-data-view", width="100%", height="100%"></iframe>
+    </div>
 
 
     <div id="footer">
