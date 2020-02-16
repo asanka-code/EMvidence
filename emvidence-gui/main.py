@@ -13,6 +13,7 @@ import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from emvincelib import iq, ml, stat
+import database
 
 import os
 import signal
@@ -67,6 +68,18 @@ def authentication():
     # incorrect password
     return render_template('login.html')
 
+
+#-------------------------------------------------------------------------------
+@app.route("/logout")
+def logout(name=None):
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+  # updating the login timestamp
+  database.updateLogoutTimestamp(db_con, 1)
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+  return render_template('login.html', name=name)
 
 #-------------------------------------------------------------------------------
 @app.route("/plot")
@@ -333,7 +346,14 @@ def is_passwd_correct(uname, passwd):
   This function takes a username and a password as parameters and lookup in the
   database. Returns true if the username and passwords matches. Returns false otherwise.
   '''
+
   if uname == 'asanka' and passwd == 'emvidence':
+    # open database connection
+    db_con = database.createDBConnection(database.database_name)
+    # updating the login timestamp
+    database.updateLoginTimestamp(db_con, 1)
+    # closing database connection
+    database.closeDBConnection(db_con)
     return True
   else:
     return False
