@@ -209,6 +209,48 @@
           xhttp.send(formData);
         }
 
+          // things to do once the document is loaded
+          $(document).ready( function() {          
+            // set the dataset selection menu
+            //setDatasetSelectionList();
+
+            // set the IoT devices selection menu
+            setIoTDeviceSelectionList();
+
+            // set the modules as checkbox elements
+            //setModulesCheckboxList();
+
+        } );
+
+        function setIoTDeviceSelectionList() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+              // take the received JSON object
+              var response = JSON.parse(this.response);
+              
+              // take the number of IoT devices
+              var len = parseInt(response["length"]);
+
+              // process each IoT device
+              for (var i=1; i<=len; i++) {          
+                // add the option to the select menu
+                $('#select-iot-device-to-delete').append($('<option>', {
+                  value: response[i.toString()]["value"],
+                  text: response[i.toString()]["text"]
+                }));
+              }
+              
+              // refresh the select menu to make the newly added options visible
+              $( "#iot-device-type" ).selectmenu("refresh", true);
+            }
+          };
+          // send the AJAX request
+          xhttp.open("POST", "/get_iot_device_list", true);
+          xhttp.send();
+        }
+
       </script>
 
     <title>EMvidence Side-Channel Investigator</title>
@@ -316,11 +358,7 @@
           <td>
             <label>Select an IoT device to delete:</label>
             <select id = "select-iot-device-to-delete">
-              <option disabled selected>Please pick an IoT device</option>
-              <option value = "module-id-1">Arduino Activity Detection</option>
-              <option value = "module-id-2">Arduino Modification Detection</option>
-              <option value = "module-id-3">Raspberry Pi Cryptography Detection</option>
-              <option value = "module-id-4">Another Module</option>
+              <option value="select-device" selected="true" disabled="disabled">Please pick an IoT device</option>              
             </select>
           </td>
           <td>
