@@ -44,6 +44,14 @@
         } );
 
         $( function() {
+          $( "#select-iot-device-to-delete" ).selectmenu(
+            {
+              width: 400
+            }
+          );
+        } );        
+
+        $( function() {
           $( ".save-button button" ).button();
           $( ".save-button button" ).click( function( event ) {
             event.preventDefault();
@@ -146,7 +154,60 @@
           // send the AJAX request
           xhttp.open("POST", "/save_settings", true);
           xhttp.send(formData);
-        }        
+        }  
+
+        $( function() {
+          $( ".save-iot-button button" ).button();
+          $( ".save-iot-button button" ).click( function( event ) {
+            event.preventDefault();
+            // submit the data to the backend
+            saveIoTDevice();
+          } );
+        } );
+
+        $( function() {
+          $( ".cancel-iot-button button" ).button();
+          $( ".cancel-iot-button button" ).click( function( event ) {
+            event.preventDefault();
+            window.location.href = "/settings";
+          } );
+        } );
+
+        function saveIoTDevice() {            
+          // a form data object
+          var formData = new FormData();
+
+          // take the new IoT devife name
+          var new_iot_device_name = document.getElementById("new-iot-device-name").value;          
+          // append the new IoT device name to form data object
+          formData.append("new_iot_device_name", new_iot_device_name);
+
+          // take the new IoT devife description
+          var new_iot_device_description = document.getElementById("new-iot-device-description").value;
+          // append the new IoT device description to form data object
+          formData.append("new_iot_device_description", new_iot_device_description);
+
+
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              if (this.responseText == "done") {                          
+                // set the figures visible
+                //document.getElementById("visualize-data").style.visibility = "visible";
+                alert("IoT device added");
+                // clear the content of the fields
+                document.getElementById("new-iot-device-name").value = "";
+                document.getElementById("new-iot-device-description").value = "";
+              } else {
+                alert("Error occured while adding!");
+              }
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/add-iot-device", true);
+          xhttp.send(formData);
+        }
 
       </script>
 
@@ -225,6 +286,55 @@
       </table>
       </fieldset>
     </form>
+
+    <form action="/" method="POST">
+      <fieldset>
+      <legend>IoT Device Settings</legend>
+      <table>
+        <tr>
+          <td>IoT device name:<input type="text" name="new-iot-device-name" id="new-iot-device-name"></td>  
+        </tr>
+        <tr>
+          <td>IoT device description:</td>
+        </tr>
+        <tr>
+          <td>
+            <textarea name="new-iot-device-description" id="new-iot-device-description" rows="4" cols="50" placeholder="Add device description" wrap="physical"></textarea>
+          </td>
+        </tr>
+      </table> 
+
+      <table>
+        <tr>
+          <td><div class="save-iot-button"><button>Add IoT device</button></div></td>
+          <td><div class="cancel-iot-button"><button>Cancel IoT device</button></div></td>
+        </tr>
+      </table>
+       
+      <table>
+        <tr>
+          <td>
+            <label>Select an IoT device to delete:</label>
+            <select id = "select-iot-device-to-delete">
+              <option disabled selected>Please pick an IoT device</option>
+              <option value = "module-id-1">Arduino Activity Detection</option>
+              <option value = "module-id-2">Arduino Modification Detection</option>
+              <option value = "module-id-3">Raspberry Pi Cryptography Detection</option>
+              <option value = "module-id-4">Another Module</option>
+            </select>
+          </td>
+          <td>
+            <div class="module-delete-widget">
+              <input type="button" value="Delete" name="delete-iot-device" id="delete-iot-device">
+              <input type="button" value="Cancel" name="cancel-iot-delete" id="cancel-iot-delete">
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      </fieldset>
+    </form>
+
 
 
     <div id="footer">

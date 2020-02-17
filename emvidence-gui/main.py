@@ -324,6 +324,25 @@ def get_modules_list():
   res = make_response(jsonify(response_body), 200)
   return res
 
+
+#-------------------------------------------------------------------------------
+@app.route("/add-iot-device", methods=['POST', 'GET'])
+def add_iot_device():
+  # take the choices made by the user
+  new_iot_device_name = request.form['new_iot_device_name']
+  new_iot_device_description = request.form['new_iot_device_description']
+
+  #print("IMPORTANT: " + str(new_iot_device_name) + " " + str(new_iot_device_description))
+
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+  # adding new IoT device
+  database.addIoTDevice(db_con, new_iot_device_name, new_iot_device_description)
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+  return "done"
+
 ################################### Functions ######################################
 
 

@@ -239,7 +239,6 @@ def initializeDB(database_name):
 ########################################################
 
 def testingDatabse():
-    '''
     # initialize the database - only once
     initializeDB(database_name)
 
@@ -262,7 +261,7 @@ def testingDatabse():
     # open database connection
     db_con = createDBConnection(database_name)
     # add IoT device
-    addIoTDevice(db_con, "Raspberry Pi 3B+", "This is th model 3 B+ of Raspberry Pi device.")
+    addIoTDevice(db_con, "Raspberry Pi 3B+", "This is the model 3 B+ of Raspberry Pi device.")
     # closing database connection
     closeDBConnection(db_con)
 
@@ -307,7 +306,6 @@ def testingDatabse():
     addEMTrace(db_con, "file1", "hashvalue", "sha1", 1)
     # closing database connection
     closeDBConnection(db_con)
-    '''
 
     # open database connection
     db_con = createDBConnection(database_name)
@@ -317,4 +315,4 @@ def testingDatabse():
     closeDBConnection(db_con)
 
 
-testingDatabse()
+#testingDatabse()
