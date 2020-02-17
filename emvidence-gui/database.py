@@ -58,6 +58,87 @@ def createUser(conn, username, password, description):
     conn.commit()
     return cur.lastrowid
 
+def addIoTDevice(conn, deviceNAme, description):
+    iot_device = (deviceNAme, description)
+    sql = ''' INSERT INTO iotdevices(name, description)
+              VALUES(?,?); '''
+    cur = conn.cursor()
+    cur.execute(sql, iot_device)
+    conn.commit()
+    return cur.lastrowid
+
+def removeIoTDevice(conn, deviceID):
+    iot_device = (deviceID,)
+    sql = ''' DELETE FROM iotdevices WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, iot_device)
+    conn.commit()
+    return cur.lastrowid
+
+def addModule(conn, name, description, iot_device_id):
+    # user addition timestamp
+    timestamp = time.time()
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    # new module attributes
+    new_module = (name, description, timestamp, iot_device_id)
+    sql = ''' INSERT INTO modules(name, description, timestamp, iot_device_id)
+              VALUES(?,?,?,?); '''
+    cur = conn.cursor()
+    cur.execute(sql, new_module)
+    conn.commit()
+    return cur.lastrowid
+
+def removeModule(conn, moduleID):
+    module = (moduleID,)
+    sql = ''' DELETE FROM modules WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, module)
+    conn.commit()
+    return cur.lastrowid
+
+def addDataset(conn, name, directory_path, description, user_id, iot_device_id):
+    # dataset addition timestamp
+    timestamp = time.time()
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    # new dataset attributes
+    new_dataset = (name, directory_path, description, timestamp, user_id, iot_device_id)
+    sql = ''' INSERT INTO datasets(name, directory_path, description, timestamp, user_id, iot_device_id)
+              VALUES(?,?,?,?,?,?); '''
+    cur = conn.cursor()
+    cur.execute(sql, new_dataset)
+    conn.commit()
+    return cur.lastrowid
+
+def removeDataset(conn, datasetID):
+    dataset = (datasetID,)
+    sql = ''' DELETE FROM datasets WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, dataset)
+    conn.commit()
+    return cur.lastrowid
+
+def addEMTrace(conn, filename, hash_value, hash_function, dataset_id):
+    # dataset addition timestamp
+    timestamp = time.time()
+    timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    # new dataset attributes
+    new_EM_trace = (filename, hash_value, hash_function, timestamp, dataset_id)
+    sql = ''' INSERT INTO emtraces(filename, hash_value, hash_function, timestamp, dataset_id)
+              VALUES(?,?,?,?,?); '''
+    cur = conn.cursor()
+    cur.execute(sql, new_EM_trace)
+    conn.commit()
+    return cur.lastrowid
+
+def removeEMTrace(conn, emTraceID):
+    dataset = (emTraceID,)
+    sql = ''' DELETE FROM emtraces WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, dataset)
+    conn.commit()
+    return cur.lastrowid
+
+
 ##############################################################
 
 def createTable(conn, create_table_sql):
@@ -101,7 +182,9 @@ def initializeDB(database_name):
     sql_create_emtraces_table = """ CREATE TABLE IF NOT EXISTS emtraces (
                                         id integer PRIMARY KEY,
                                         filename text NOT NULL,
-                                        hash_value text NOT NULL,                                    
+                                        hash_value text NOT NULL, 
+                                        hash_function text NOT NULL,
+                                        timestamp text NOT NULL,                                   
                                         dataset_id integer NOT NULL,
                                         FOREIGN KEY (dataset_id) REFERENCES datasets (id)
                                 ); """
@@ -156,8 +239,9 @@ def initializeDB(database_name):
 ########################################################
 
 def testingDatabse():
+    '''
     # initialize the database - only once
-    #initializeDB(database_name)
+    initializeDB(database_name)
 
     # open database connection
     db_con = createDBConnection(database_name)
@@ -174,3 +258,63 @@ def testingDatabse():
     updateLogoutTimestamp(db_con, 1)
     # closing database connection
     closeDBConnection(db_con)
+
+    # open database connection
+    db_con = createDBConnection(database_name)
+    # add IoT device
+    addIoTDevice(db_con, "Raspberry Pi 3B+", "This is th model 3 B+ of Raspberry Pi device.")
+    # closing database connection
+    closeDBConnection(db_con)
+
+    # open database connection
+    db_con = createDBConnection(database_name)
+    # add IoT device
+    removeIoTDevice(db_con, 1)
+    # closing database connection
+    closeDBConnection(db_con)
+
+    # open database connection
+    db_con = createDBConnection(database_name)
+    # add new module
+    addModule(db_con, "New module", "This is a new module that perform crytography detection", 1)
+    # closing database connection
+    closeDBConnection(db_con)
+
+    # open database connection
+    db_con = createDBConnection(database_name)
+    # remove a module
+    removeModule(db_con, 1)
+    # closing database connection
+    closeDBConnection(db_con) 
+
+    # open database connection
+    db_con = createDBConnection(database_name)
+    # add new dataset
+    addDataset(db_con, "Suspect Dataset", "directory/path", "This is a dataset acquired from a suspect device", 1, 1)
+    # closing database connection
+    closeDBConnection(db_con)
+
+    # open database connection
+    db_con = createDBConnection(database_name)
+    # remove dataset
+    removeDataset(db_con, 1)
+    # closing database connection
+    closeDBConnection(db_con)
+
+    # open database connection
+    db_con = createDBConnection(database_name)
+    # add new EM trace
+    addEMTrace(db_con, "file1", "hashvalue", "sha1", 1)
+    # closing database connection
+    closeDBConnection(db_con)
+    '''
+
+    # open database connection
+    db_con = createDBConnection(database_name)
+    # remove EM trace
+    removeEMTrace(db_con, 1)
+    # closing database connection
+    closeDBConnection(db_con)
+
+
+testingDatabse()
