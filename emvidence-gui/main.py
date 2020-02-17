@@ -281,6 +281,36 @@ def get_dataset_list():
 @app.route("/get_iot_device_list", methods=['POST', 'GET'])
 def get_iot_device_list():
 
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+
+  # take the data
+  cursor = database.getIoTDevices(db_con)
+
+  # result count
+  count = 0
+
+  # response skeleton
+  response_body = {"length" : count, }
+
+  # take first row of results
+  result = cursor.fetchone()
+
+  # process all the results
+  while result is not None:
+    count = count + 1
+    # add the this IoT device result to the JSON object
+    response_body[str(count)] = {"value" : str(result[0]), "text" : str(result[1])}
+    result = cursor.fetchone()
+
+  # update the response count
+  response_body["length"] = count
+
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+  #print(str(response_body))
+  '''
   response_body = {
     "length" : 2,
     "1" : {
@@ -292,6 +322,7 @@ def get_iot_device_list():
       "text" : "RaspberryPi 3B+"
     }
   }
+  '''
   
   res = make_response(jsonify(response_body), 200)
   return res
@@ -324,7 +355,6 @@ def get_modules_list():
   res = make_response(jsonify(response_body), 200)
   return res
 
-
 #-------------------------------------------------------------------------------
 @app.route("/add-iot-device", methods=['POST', 'GET'])
 def add_iot_device():
@@ -338,6 +368,23 @@ def add_iot_device():
   db_con = database.createDBConnection(database.database_name)
   # adding new IoT device
   database.addIoTDevice(db_con, new_iot_device_name, new_iot_device_description)
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+  return "done"
+
+#-------------------------------------------------------------------------------
+@app.route("/delete_iot_device", methods=['POST', 'GET'])
+def delete_iot_device():
+  # take the choices made by the user
+  iot_device_to_delete = request.form['iot_device_to_delete']
+  
+  print("IMPORTANT: " + str(iot_device_to_delete))
+
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+  # delete IoT device
+  database.removeIoTDevice(db_con, int(iot_device_to_delete))
   # closing database connection
   database.closeDBConnection(db_con)
 

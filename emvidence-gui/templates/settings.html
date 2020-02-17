@@ -96,6 +96,8 @@
           fillDefaultDirectory();
           // set the EM data format
           setEMdataFormat();
+          // set the IoT devices selection menu
+          setIoTDeviceSelectionList();
         } );
                 
         function fillDefaultDirectory() {
@@ -198,6 +200,9 @@
                 // clear the content of the fields
                 document.getElementById("new-iot-device-name").value = "";
                 document.getElementById("new-iot-device-description").value = "";
+
+                // refresh the select menu to make the newly added options visible
+                window.location.href = "/settings";
               } else {
                 alert("Error occured while adding!");
               }
@@ -208,19 +213,6 @@
           xhttp.open("POST", "/add-iot-device", true);
           xhttp.send(formData);
         }
-
-          // things to do once the document is loaded
-          $(document).ready( function() {          
-            // set the dataset selection menu
-            //setDatasetSelectionList();
-
-            // set the IoT devices selection menu
-            setIoTDeviceSelectionList();
-
-            // set the modules as checkbox elements
-            //setModulesCheckboxList();
-
-        } );
 
         function setIoTDeviceSelectionList() {
           var xhttp = new XMLHttpRequest();
@@ -243,13 +235,60 @@
               }
               
               // refresh the select menu to make the newly added options visible
-              $( "#iot-device-type" ).selectmenu("refresh", true);
+              $( "#select-iot-device-to-delete" ).selectmenu("refresh", true);
             }
           };
           // send the AJAX request
           xhttp.open("POST", "/get_iot_device_list", true);
           xhttp.send();
         }
+
+        $( function() {
+          $( ".delete-iot-device button" ).button();
+          $( ".delete-iot-device button" ).click( function( event ) {
+            event.preventDefault();
+            // submit the data to the backend
+            deleteIoTDevice()
+          } );
+        } );
+
+        $( function() {
+          $( ".cancel-iot-delete button" ).button();
+          $( ".cancel-iot-delete button" ).click( function( event ) {
+            event.preventDefault();
+            // refresh the settings page
+            window.location.href = "/settings";
+          } );
+        } );
+        
+        function deleteIoTDevice() {            
+          // a form data object
+          var formData = new FormData();
+
+          // take the selected em data format index
+          var iot_device_to_delete = document.getElementById("select-iot-device-to-delete");
+          iot_device_to_delete = iot_device_to_delete.options[iot_device_to_delete.selectedIndex].value;
+          // append sampling rate choice to the form data object
+          formData.append("iot_device_to_delete", iot_device_to_delete);
+
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              if (this.responseText == "done") {                                          
+                alert("IoT device deleted!");
+                // refresh the settings page
+                window.location.href = "/settings";
+              } else {
+                alert("Error occured while deleting!");
+              }
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/delete_iot_device", true);
+          xhttp.send(formData);
+        }
+
 
       </script>
 
@@ -363,8 +402,8 @@
           </td>
           <td>
             <div class="module-delete-widget">
-              <input type="button" value="Delete" name="delete-iot-device" id="delete-iot-device">
-              <input type="button" value="Cancel" name="cancel-iot-delete" id="cancel-iot-delete">
+              <td><div class="delete-iot-device"><button>Delete</button></div></td>
+              <td><div class="cancel-iot-delete"><button>Cancel</button></div></td>            
             </div>
           </td>
         </tr>

@@ -67,6 +67,14 @@ def addIoTDevice(conn, deviceNAme, description):
     conn.commit()
     return cur.lastrowid
 
+def getIoTDevices(conn):
+    sql = ''' SELECT * FROM iotdevices; '''
+    cur = conn.cursor()
+    cur.execute(sql)
+    #task = cur.fetchone() #retrieve the first row
+    #print(task) #Print the first column retrieved(user's name)
+    return cur
+
 def removeIoTDevice(conn, deviceID):
     iot_device = (deviceID,)
     sql = ''' DELETE FROM iotdevices WHERE id=?; '''
