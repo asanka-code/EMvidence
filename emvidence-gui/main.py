@@ -332,6 +332,36 @@ def get_iot_device_list():
 @app.route("/get_modules_list", methods=['POST', 'GET'])
 def get_modules_list():
 
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+
+  # take the data
+  cursor = database.getModules(db_con)
+
+  # result count
+  count = 0
+
+  # response skeleton
+  response_body = {"length" : count, }
+
+  # take first row of results
+  result = cursor.fetchone()
+
+  # process all the results
+  while result is not None:
+    count = count + 1
+    # add the this IoT device result to the JSON object
+    response_body[str(count)] = {"module_id" : str(result[0]), "module_name" : str(result[1])}
+    result = cursor.fetchone()
+
+  # update the response count
+  response_body["length"] = count
+
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+  #print(str(response_body))
+  '''
   response_body = {
     "length" : 4,
     "1" : {
@@ -351,9 +381,27 @@ def get_modules_list():
       "module_name" : "Raspberry Pi Modification Detection"
     }
   }
-  
+  '''
+
   res = make_response(jsonify(response_body), 200)
   return res
+
+#-------------------------------------------------------------------------------
+@app.route("/delete_module", methods=['POST', 'GET'])
+def delete_module():
+  # take the choices made by the user
+  module_to_delete = request.form['module_to_delete']
+  
+  #print("IMPORTANT: " + str(module_to_delete))
+
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+  # delete module
+  database.removeModule(db_con, int(module_to_delete))
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+  return "done"
 
 #-------------------------------------------------------------------------------
 @app.route("/add-iot-device", methods=['POST', 'GET'])

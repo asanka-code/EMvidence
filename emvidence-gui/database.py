@@ -96,6 +96,14 @@ def addModule(conn, name, description, iot_device_id):
     conn.commit()
     return cur.lastrowid
 
+def getModules(conn):
+    sql = ''' SELECT * FROM modules; '''
+    cur = conn.cursor()
+    cur.execute(sql)
+    #task = cur.fetchone() #retrieve the first row
+    #print(task) #Print the first column retrieved(user's name)
+    return cur
+
 def removeModule(conn, moduleID):
     module = (moduleID,)
     sql = ''' DELETE FROM modules WHERE id=?; '''
@@ -247,6 +255,7 @@ def initializeDB(database_name):
 ########################################################
 
 def testingDatabse():
+    '''
     # initialize the database - only once
     initializeDB(database_name)
 
@@ -279,14 +288,16 @@ def testingDatabse():
     removeIoTDevice(db_con, 1)
     # closing database connection
     closeDBConnection(db_con)
+    '''
 
     # open database connection
     db_con = createDBConnection(database_name)
     # add new module
-    addModule(db_con, "New module", "This is a new module that perform crytography detection", 1)
+    addModule(db_con, "New module 5", "This is a new module that perform crytography detection", 1)
     # closing database connection
     closeDBConnection(db_con)
 
+    '''
     # open database connection
     db_con = createDBConnection(database_name)
     # remove a module
@@ -321,6 +332,6 @@ def testingDatabse():
     removeEMTrace(db_con, 1)
     # closing database connection
     closeDBConnection(db_con)
-
+    '''
 
 #testingDatabse()

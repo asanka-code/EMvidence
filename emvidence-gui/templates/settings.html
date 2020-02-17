@@ -27,6 +27,17 @@
 
       <script>
 
+        $(document).ready( function() {
+          // fill the default directory field
+          fillDefaultDirectory();
+          // set the EM data format
+          setEMdataFormat();
+          // set the modules selection menu
+          setModuleSelectionList();
+          // set the IoT devices selection menu
+          setIoTDeviceSelectionList();
+        } );
+
         $( function() {
           $( "#em-data-format" ).selectmenu(
             {
@@ -83,6 +94,7 @@
           $( "#delete-module" ).click( function( event ) {
             event.preventDefault();
             // send the module deletion AJAX request
+            deleteModule();
           } );
 
           $( "#cancel-delete" ).click( function( event ) {
@@ -91,14 +103,33 @@
           } );
         } );
 
-        $(document).ready( function() {
-          // fill the default directory field
-          fillDefaultDirectory();
-          // set the EM data format
-          setEMdataFormat();
-          // set the IoT devices selection menu
-          setIoTDeviceSelectionList();
-        } );
+        function deleteModule() {            
+          // a form data object
+          var formData = new FormData();
+
+          // take the selected em data format index
+          var module_to_delete = document.getElementById("select-module-to-delete");
+          module_to_delete = module_to_delete.options[module_to_delete.selectedIndex].value;
+          // append sampling rate choice to the form data object
+          formData.append("module_to_delete", module_to_delete);
+
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              if (this.responseText == "done") {                                          
+                alert("Module deleted!");
+                // refresh the settings page
+                window.location.href = "/settings";
+              } else {
+                alert("Error occured while deleting!");
+              }
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/delete_module", true);
+          xhttp.send(formData);
+        }
                 
         function fillDefaultDirectory() {
           var xhttp = new XMLHttpRequest();
@@ -213,6 +244,35 @@
           xhttp.open("POST", "/add-iot-device", true);
           xhttp.send(formData);
         }
+
+        function setModuleSelectionList() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+              // take the received JSON object
+              var response = JSON.parse(this.response);
+              
+              // take the number of IoT devices
+              var len = parseInt(response["length"]);
+
+              // process each IoT device
+              for (var i=1; i<=len; i++) {          
+                // add the option to the select menu
+                $('#select-module-to-delete').append($('<option>', {
+                  value: response[i.toString()]["module_id"],
+                  text: response[i.toString()]["module_name"]
+                }));
+              }
+              
+              // refresh the select menu to make the newly added options visible
+              $( "#select-module-to-delete" ).selectmenu("refresh", true);
+            }
+          };
+          // send the AJAX request
+          xhttp.open("POST", "/get_modules_list", true);
+          xhttp.send();
+        }        
 
         function setIoTDeviceSelectionList() {
           var xhttp = new XMLHttpRequest();
@@ -350,13 +410,11 @@
             <td>
               <label>Select a module to delete:</label>
               <select id = "select-module-to-delete">
-                <option disabled selected>Please pick a module</option>
-                <option value = "module-id-1">Arduino Activity Detection</option>
-                <option value = "module-id-2">Arduino Modification Detection</option>
-                <option value = "module-id-3">Raspberry Pi Cryptography Detection</option>
-                <option value = "module-id-4">Another Module</option>
+                <option value="select-module" selected="true" disabled="disabled">Please pick a module</option>                
               </select>
             </td>
+
+            
             <td>
               <div class="module-delete-widget">
                 <input type="button" value="Delete" name="delete-module" id="delete-module">
