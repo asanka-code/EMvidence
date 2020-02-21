@@ -83,11 +83,45 @@
           $( ".widget input[type=submit]" ).button();
           $( ".widget input[type=file]" ).button();
           $( ".widget input[type=button]" ).button();
+
+          $( "#upload-zip" ).click( function( event ) {
+            event.preventDefault();
+            // submit the selected ZIP file            
+            addModule()
+            //document.getElementById("add-module-form").submit();
+          } );
+
           $( "#cancel-upload" ).click( function( event ) {
             event.preventDefault();
             window.location.href = "/settings";
           } );
         } );
+
+
+        function addModule() {                                                  
+          // a form data object
+          var formData = new FormData();
+
+          // take the selected file object
+          formData.append("fileToUpload", $('input[type=file]')[0].files[0]);
+          
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              if (this.responseText == "done") {                                          
+                alert("New module added successfully!");
+                // refresh the settings page
+                window.location.href = "/settings";
+              } else {
+                alert("Error occured while adding module!");
+              }
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/add_module", true);
+          xhttp.send(formData);                    
+        }
 
         $( function() {          
           $( ".module-delete-widget input[type=button]" ).button();
@@ -391,20 +425,22 @@
       </form>
     </div>
 
-    <form action="/add-module" method="post" enctype="multipart/form-data">
       <fieldset>
         <legend>Module Settings</legend>
         <table>
-          <tr>
-            <td>
-            Select module ZIP file to upload:
-            <div class="widget">
-              <input type="file" name="fileToUpload" id="fileToUpload">
-              <input type="submit" value="Upload ZIP" name="submit">
-              <input type="button" value="Cancel" name="cancel-upload" id="cancel-upload">
-            </div>
-            </td>
-          </tr>
+
+          <form action="/add_module" method="post" enctype="multipart/form-data" id="add-module-form">          
+            <tr>
+              <td>
+                Select module ZIP file to upload:            
+                <div class="widget">
+                  <input type="file" name="fileToUpload" id="fileToUpload">
+                  <input type="submit" value="Upload ZIP" name="upload-zip" id="upload-zip">
+                  <input type="button" value="Cancel" name="cancel-upload" id="cancel-upload">
+                </div>
+              </td>
+            </tr>          
+          </form>
 
           <tr>
             <td>
@@ -424,7 +460,7 @@
           </tr>
       </table>
       </fieldset>
-    </form>
+
 
     <form action="/" method="POST">
       <fieldset>

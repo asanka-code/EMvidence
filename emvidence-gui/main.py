@@ -20,6 +20,7 @@ import signal
 import subprocess
 import configparser
 import hashlib
+from werkzeug import secure_filename
 
 
 # initialize the config file
@@ -28,6 +29,9 @@ config = configparser.ConfigParser()
 config.read(config_file_name)
 
 app = Flask(__name__)
+
+# file upload directory
+app.config['UPLOAD_FOLDER'] = "/home/asanka/Documents/github/EMvidence/emvidence-gui/temp-modules"
 
 #-------------------------------------------------------------------------------
 @app.route("/")
@@ -385,6 +389,27 @@ def get_modules_list():
 
   res = make_response(jsonify(response_body), 200)
   return res
+
+#-------------------------------------------------------------------------------
+@app.route("/add_module", methods=['POST', 'GET'])
+def add_module():  
+  if request.method == 'POST':
+    f = request.files['fileToUpload']
+    f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+    print("IMPORTANT: Module Added!")
+
+    '''
+    # take the choices made by the user
+    module_to_delete = request.form['module_to_delete']
+
+    # open database connection
+    db_con = database.createDBConnection(database.database_name)
+    # delete module
+    database.removeModule(db_con, int(module_to_delete))
+    # closing database connection
+    database.closeDBConnection(db_con)
+    '''
+  return "done"
 
 #-------------------------------------------------------------------------------
 @app.route("/delete_module", methods=['POST', 'GET'])
