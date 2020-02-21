@@ -23,6 +23,8 @@ import hashlib
 from werkzeug import secure_filename
 import zipfile
 import shutil
+import importlib
+import importlib.util
 
 # initialize the config file
 config_file_name = "emvidence.config"
@@ -239,7 +241,6 @@ def save_settings():
 #-------------------------------------------------------------------------------
 @app.route("/analyze-data", methods=['POST', 'GET'])
 def analze_data():
-  
   # take the choices made by the user
   dataset_choice = request.form['dataset_choice']
   iot_device_type = request.form['iot_device_type']
@@ -249,10 +250,22 @@ def analze_data():
   # split the module id string into individual id elements in an array
   selected_modules = selected_modules.split(',')
 
-  time.sleep(2)
-
-  print("IMPORTANT: " + dataset_choice + " " + iot_device_type)
-  print(selected_modules)
+  # process each module
+  for module_id in selected_modules:
+    print("LOG: Processing module ID: " + str(int(module_id)))
+    # open database connection
+    db_con = database.createDBConnection(database.database_name)
+    # get module name
+    module_name = database.getModuleName(db_con, int(module_id))
+    # closing database connection
+    database.closeDBConnection(db_con)
+    # prepare the module path
+    module_path = str(config['general-settings']['module-directory']) + "/" + str(module_name) + "/" + "main.py"
+    # loading module
+    mod = loadModule(module_path)
+    # calling module functions
+    mod.initialize(1)
+    mod.preprocess("/path/to/em-trace")
 
   return "done"
 
@@ -587,6 +600,12 @@ def addZippedModule(directory_to_extract_to, zip_file_name, module_directory):
     #os.remove(directory_to_extract_to + "/*")
 
     return True
+
+def loadModule(module_path):
+    spec = importlib.util.spec_from_file_location("main", module_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 if __name__ == "__main__":
