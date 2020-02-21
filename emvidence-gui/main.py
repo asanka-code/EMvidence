@@ -21,7 +21,8 @@ import subprocess
 import configparser
 import hashlib
 from werkzeug import secure_filename
-
+import zipfile
+import shutil
 
 # initialize the config file
 config_file_name = "emvidence.config"
@@ -31,7 +32,8 @@ config.read(config_file_name)
 app = Flask(__name__)
 
 # file upload directory
-app.config['UPLOAD_FOLDER'] = "/home/asanka/Documents/github/EMvidence/emvidence-gui/temp-modules"
+#app.config['UPLOAD_FOLDER'] = "/home/asanka/Documents/github/EMvidence/emvidence-gui/temp-modules"
+app.config['UPLOAD_FOLDER'] = config['general-settings']['temp-module-directory']
 
 #-------------------------------------------------------------------------------
 @app.route("/")
@@ -396,20 +398,36 @@ def add_module():
   if request.method == 'POST':
     f = request.files['fileToUpload']
     f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
-    print("IMPORTANT: Module Added!")
 
-    '''
-    # take the choices made by the user
-    module_to_delete = request.form['module_to_delete']
+    # zip file name without file extension
+    zip_file_name = f.filename.split(".")[0]
 
-    # open database connection
-    db_con = database.createDBConnection(database.database_name)
-    # delete module
-    database.removeModule(db_con, int(module_to_delete))
-    # closing database connection
-    database.closeDBConnection(db_con)
-    '''
-  return "done"
+    # path configurations
+    directory_to_extract_to = config['general-settings']['temp-module-directory']
+    module_directory = config['general-settings']['module-directory']
+
+    status = addZippedModule(directory_to_extract_to, zip_file_name, module_directory)
+    if status is True:
+
+      # read module configuration file
+      temp_config = configparser.ConfigParser()
+      temp_config.read(module_directory + "/" + zip_file_name + "/config.config")
+      module_description = temp_config['configuration']['description']
+
+      # open database connection
+      db_con = database.createDBConnection(database.database_name)
+      # add module details to the database
+      database.addModule(db_con, zip_file_name, module_description, 1)
+      # closing database connection
+      database.closeDBConnection(db_con)
+
+      #print("Module added successfully.")
+      return "done"
+    else:
+      #print("Failed to add the module")
+      return "failed"
+  else:
+    pass
 
 #-------------------------------------------------------------------------------
 @app.route("/delete_module", methods=['POST', 'GET'])
@@ -421,8 +439,19 @@ def delete_module():
 
   # open database connection
   db_con = database.createDBConnection(database.database_name)
-  # delete module
+
+  # get module name
+  module_name = database.getModuleName(db_con, int(module_to_delete))
+  # path to the module files
+  module_directory = config['general-settings']['module-directory'] + "/" + str(module_name)
+  #print("Module path: " + str(module_directory))
+
+  # delete module files
+  shutil.rmtree(str(module_directory))
+
+  # delete module information from the database
   database.removeModule(db_con, int(module_to_delete))
+
   # closing database connection
   database.closeDBConnection(db_con)
 
@@ -496,7 +525,70 @@ def is_passwd_correct(uname, passwd):
     return True
   else:
     return False
-  
+
+def addZippedModule(directory_to_extract_to, zip_file_name, module_directory):
+    '''
+    This function takes a zipped file, extracts it at the same location,
+    checks if all the necessary files are included in the extracted directory.
+    Then it moves the extracted directory to another specified location and delete
+    to files and directories in the original location.
+    '''
+
+    # location where the uploaded zip file is
+    temp_path = directory_to_extract_to + "/" + zip_file_name
+
+    # unzip the file and save in the same directory
+    with zipfile.ZipFile(temp_path + ".zip", 'r') as zip_ref:
+        zip_ref.extractall(directory_to_extract_to)
+
+    # check whether all the necessary files are included in the zip file
+    if os.path.isfile(temp_path + "/main.py") is True:
+        #print("main.py file exists.")
+        pass
+    else:
+        # delete the temporary files and exit
+        os.remove(temp_path + ".zip")
+        shutil.rmtree(temp_path)
+        return False
+
+    if os.path.isfile(temp_path + "/ml-model.joblib") is True:
+        #print("ml-model.joblib file exists.")
+        pass
+    else:
+        # delete the temporary files and exit
+        os.remove(temp_path + ".zip")
+        shutil.rmtree(temp_path)
+        return False
+
+    if os.path.isfile(temp_path + "/README.txt") is True:
+        #print("README.txt file exists.")
+        pass
+    else:
+        # delete the temporary files and exit
+        os.remove(temp_path + ".zip")
+        shutil.rmtree(temp_path)
+        return False
+
+    if os.path.isfile(temp_path + "/config.config") is True:
+        #print("config.config file exists.")
+        pass
+    else:
+        # delete the temporary files and exit
+        os.remove(temp_path + ".zip")
+        shutil.rmtree(temp_path)
+        return False
+
+    # copy the module to correct location
+    shutil.move(temp_path, module_directory)
+    
+
+    # delete the temporary files
+    os.remove(temp_path + ".zip")
+    #os.remove(directory_to_extract_to + "/*")
+
+    return True
+
+
 if __name__ == "__main__":
   app.run()
 

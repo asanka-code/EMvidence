@@ -104,6 +104,14 @@ def getModules(conn):
     #print(task) #Print the first column retrieved(user's name)
     return cur
 
+def getModuleName(conn, moduleID):
+    module = (moduleID,)
+    sql = ''' SELECT * FROM modules WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, module)
+    module_row = cur.fetchone() #retrieve the first row    
+    return module_row[1]
+
 def removeModule(conn, moduleID):
     module = (moduleID,)
     sql = ''' DELETE FROM modules WHERE id=?; '''
