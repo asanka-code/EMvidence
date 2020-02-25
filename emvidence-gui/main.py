@@ -20,7 +20,7 @@ import signal
 import subprocess
 import configparser
 import hashlib
-from werkzeug import secure_filename
+#from werkzeug import secure_filename
 import zipfile
 import shutil
 import importlib
@@ -528,7 +528,7 @@ def is_passwd_correct(uname, passwd):
   database. Returns true if the username and passwords matches. Returns false otherwise.
   '''
 
-  if uname == 'asanka' and passwd == 'emvidence':
+  if uname == 'emvidence' and passwd == 'emvidence':
     # open database connection
     db_con = database.createDBConnection(database.database_name)
     # updating the login timestamp
