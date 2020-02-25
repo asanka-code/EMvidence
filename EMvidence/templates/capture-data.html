@@ -1,0 +1,298 @@
+<html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+      <link rel="stylesheet" href="/resources/demos/style.css">
+      <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+      <style>
+        .ui-menu {
+          width: 200px;
+          vertical-align: top;
+        }
+        #modules-button {
+          width: 60;
+        }
+        td {
+          align-self: auto;
+        }
+        #footer {
+          position: fixed;
+          bottom: 0; 
+          width: 100%;
+        }
+
+        body {
+          background-color:#ccddff;
+        }
+        
+        #capture-progress {
+          visibility: hidden;
+        }
+
+        #visualize-data {
+          visibility: hidden;
+        }
+
+        .ui-progressbar {
+          position: relative;
+          visibility: visible;
+        }
+        .progress-label {
+          position: absolute;
+          left: 50%;
+          top: 4px;
+          font-weight: bold;
+          text-shadow: 1px 1px 0 #fff;
+        }
+
+      </style>
+
+      <script>
+
+        $( function() {
+          $( "#sdr-device" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#center-frequency-scale" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#sampling-rate" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#sampling-duration" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#hash-function" ).selectmenu(
+            {
+              width: 200
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#progressbar" ).progressbar({
+            value: true
+          });
+
+          progressLabel = $( ".progress-label" );
+          progressLabel.text("- Ready -");
+        } );
+
+        $( function() {
+          $( ".capture-button button" ).button();
+          $( ".capture-button button" ).click( function( event ) {
+            event.preventDefault();
+            submitCaptureSettings();
+
+          } );
+        } );
+
+        function submitCaptureSettings() {
+          // progress bar and its label objects
+          progressbar = $( "#progressbar" );
+          progressLabel = $( ".progress-label" );
+
+          // update the progress bar status
+          progressLabel.text("Data capture in progress...");
+          progressbar.progressbar( "value", false);
+
+          // a form data object
+          var formData = new FormData();
+
+          // take the selected SDR device index
+          var sdr_choice = document.getElementById("sdr-device");
+          var sdr = sdr_choice.options[sdr_choice.selectedIndex].value;
+          // append sdr choice to the form data object
+          formData.append("sdr", sdr);
+
+          // take the center frequency for the SDR
+          var center_frequency = document.getElementById("center-frequency").value;
+          formData.append("center_frequency", center_frequency);
+
+          // take the selected sampling rate index
+          var center_frequency_scale = document.getElementById("center-frequency-scale");
+          center_frequency_scale = center_frequency_scale.options[center_frequency_scale.selectedIndex].value;
+          // append sampling rate choice to the form data object
+          formData.append("center_frequency_scale", center_frequency_scale);
+
+          // take the selected sampling rate index
+          var sampling_rate = document.getElementById("sampling-rate");
+          sampling_rate = sampling_rate.options[sampling_rate.selectedIndex].value;
+          // append sampling rate choice to the form data object
+          formData.append("sampling_rate", sampling_rate);
+
+          // take the selected sampling duration index
+          var sampling_duration = document.getElementById("sampling-duration");
+          sampling_duration = sampling_duration.options[sampling_duration.selectedIndex].value;
+          // append sampling duration choice to the form data object
+          formData.append("sampling_duration", sampling_duration);
+
+          // take the selected hash function index
+          var hash_function = document.getElementById("hash-function");
+          hash_function = hash_function.options[hash_function.selectedIndex].value;
+          // append hash function choice to the form data object
+          formData.append("hash_function", hash_function);
+
+          // take the file name
+          var file_name = document.getElementById("file-name").value;
+          // append file name to the form data object
+          formData.append("file_name", file_name);
+
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+              if (this.responseText == "done") {
+                // update progress bar status
+                progressLabel.text("Done!");
+                var val = progressbar.progressbar( "value" ) || 0;
+                progressbar.progressbar( "value", true);
+                
+                // set the figures visible
+                document.getElementById("visualize-data").style.visibility = "visible";
+
+                // realoading the iframe to show the graphs of the captured data
+                var iframe = document.getElementById('captured-data-view');
+                iframe.src = iframe.src;
+
+              } else {
+                // update progress bar status
+                progressLabel.text("Something went wrong...");
+                var val = progressbar.progressbar( "value" ) || 0;
+                progressbar.progressbar( "value", true);  
+              }
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/capture-data", true);
+          xhttp.send(formData);
+        }
+      </script>
+
+
+
+    <title>EMvidence Side-Channel Investigator</title>
+    </head>
+  
+    <body>
+    
+    <!-- the main toolbar-->
+    {% include 'main-toolbar.html' %}
+
+    <div class="capture-settings">
+      <h6>Data Capture Settings</h6>
+      <form action="/user-authentication" method="POST">
+        <fieldset>
+        <legend>Data Capture Settings</legend>
+
+
+        <table>
+          <tr>
+            <td>
+              <label>SDR Device:</label>
+              <select id = "sdr-device">
+                <option value = "rtlsdr">RTL-SDR</option>
+                <option value = "hackrf" selected="selected">HackRF One</option>
+              </select>
+            </td>
+
+            <td>
+            Center Frequency:<input type="text" name="center-frequency" id="center-frequency" maxlength="8" size="8">
+            <label></label>
+              <select id = "center-frequency-scale">
+                <option value = "H">Hz</option>
+                <option value = "K">KHz</option>
+                <option value = "M" selected="selected">MHz</option>
+                <option value = "G">GHz</option>
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td>            
+              <label>Sampling rate:</label>
+                <select id = "sampling-rate">
+                  <option value = "4000000">4 MHz</option>
+                  <option value = "8000000">8 MHz</option>
+                  <option value = "10000000">10 MHz</option>
+                  <option value = "20000000" selected="selected">20 MHz</option>
+                </select>
+            </td>
+
+            <td>            
+              <label>Sampling duration:</label>
+                <select id = "sampling-duration">
+                  <option value = "10" selected="selected">10 ms</option>
+                  <option value = "50">50 ms</option>
+                  <option value = "100">100 ms</option>
+                  <option value = "200">200 ms</option>
+                  <option value = "500">500 ms</option>
+                  <option value = "1000">1000 ms</option>
+                </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td>            
+              <label>Hash function:</label>
+                <select id = "hash-function">
+                  <option value = "md5">MD5</option>
+                  <option value = "sha1">SHA1</option>
+                  <option value = "sha256" selected="selected">SHA256</option>
+                </select>
+            </td>
+
+            <td>File name:<input type="text" name="file-name" id="file-name"></td>
+          </tr>
+  
+        </table>
+
+        </fieldset>
+      </form>
+    </div>
+
+    <table>
+      <tr>
+        <td><div class="capture-button"><button>Capture data</button></div></td>
+      </tr>
+    </table>
+
+    <!-- progress bar to indicate the progress of data capture -->
+    <div id="progressbar"><div class="progress-label">This content will never be visible.</div></div>
+
+    <div class="visualize-data" id="visualize-data">
+      <iframe src="/captured_data_view" style="border:none;", name="captured-data-view", id="captured-data-view", width="100%", height="100%"></iframe>
+    </div>
+
+    <div id="footer">
+    <br/>
+    <hr width="100%">
+    EMvidence Side-Channel Investigator
+    </div>
+
+    </body>
+</html>

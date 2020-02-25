@@ -1,0 +1,76 @@
+<html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+      <link rel="stylesheet" href="/resources/demos/style.css">
+      <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+      <style>
+        .ui-menu {
+          width: 200px;
+          vertical-align: top;
+        }
+        #modules-button {
+          width: 60;
+        }
+        td {
+          align-self: auto;
+        }
+        #footer {
+          position: fixed;
+          bottom: 0; 
+          width: 100%;
+        }
+      </style>
+
+    <title>EMvidence Side-Channel Investigator</title>
+    </head>
+  
+    <body>
+    
+    <!-- the main toolbar-->
+    {% include 'main-toolbar.html' %}
+
+
+    <table style="width:100%">
+      <tr>
+        <td text-align="center">
+          356GB of EM traces in 300 files.
+        </td>
+        <td>
+          23 IoT supported such as Arduino, Raspberry Pi, etc.
+        </td>
+      </tr>
+
+      <tr>
+        <td text-align="center">
+          6 SDR devices supported - HackRF, RTL-SDR, PlutoSDR, etc.
+        </td>
+        <td>
+          Available 15 modules for device analysis.
+        </td>
+      </tr>
+        
+      <tr>
+        <td>
+          <img src="/plot" alt="my plot">
+        </td>
+        <td>
+          <img src="/plot" alt="my plot">
+        </td>
+      </tr>
+    </table>
+
+
+
+
+    <div id="footer">
+    <br/>
+    <hr width="100%">
+    EMvidence Side-Channel Investigator
+    </div>
+
+    </body>
+</html>
