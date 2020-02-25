@@ -12,5 +12,3 @@ Dashboard functionalities:
 
 1. Capture EM data - set the SDR settings, capture data, save to local disk, generate hash values.
 2. Select an ML architecture and train a model with data.
-
-https://drive.google.com/drive/folders/12FufdqvP9DCfSQeGOxvsCLuQpbbt_C68?usp=sharing
