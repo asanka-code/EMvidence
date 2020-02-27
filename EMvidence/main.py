@@ -528,17 +528,37 @@ def is_passwd_correct(uname, passwd):
   database. Returns true if the username and passwords matches. Returns false otherwise.
   '''
 
-  if uname == 'emvidence' and passwd == 'emvidence':
-    # open database connection
-    db_con = database.createDBConnection(database.database_name)
-    # updating the login timestamp
-    database.updateLoginTimestamp(db_con, 1)
-    # closing database connection
-    database.closeDBConnection(db_con)
-    return True
-  else:
-    return False
+  # the value to return at the end
+  return_value = False
 
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+
+  # Take the password hash of the user from database
+  true_passwd_hash = database.getUserPasswordHash(db_con, str(uname))
+
+  # check if the user exists
+  if true_passwd_hash is None:
+    return_value = False
+  else:
+    # hash the user entered password
+    hasher = hashlib.sha1()
+    hasher.update(passwd.encode('utf-8'))
+    entered_passwd_hash = hasher.hexdigest()
+
+    # Check if the passwords are correct
+    if entered_passwd_hash == true_passwd_hash:
+      # updating the login timestamp
+      database.updateLoginTimestamp(db_con, 1)
+      return_value = True
+    else:
+      return_value = False
+  
+  # closing database connection
+  database.closeDBConnection(db_con)
+  return return_value
+
+#-------------------------------------------------------------------------------
 def addZippedModule(directory_to_extract_to, zip_file_name, module_directory):
     '''
     This function takes a zipped file, extracts it at the same location,
@@ -601,6 +621,7 @@ def addZippedModule(directory_to_extract_to, zip_file_name, module_directory):
 
     return True
 
+#-------------------------------------------------------------------------------
 def loadModule(module_path):
     spec = importlib.util.spec_from_file_location("main", module_path)
     mod = importlib.util.module_from_spec(spec)
@@ -608,6 +629,8 @@ def loadModule(module_path):
     return mod
 
 
+
+#-------------------------------------------------------------------------------
 if __name__ == "__main__":
   app.run()
 

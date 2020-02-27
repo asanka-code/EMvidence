@@ -58,6 +58,24 @@ def createUser(conn, username, password, description):
     conn.commit()
     return cur.lastrowid
 
+
+def getUserPasswordHash(conn, uname):
+    username = (uname,)
+    sql = ''' SELECT password_hash FROM users WHERE uname=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, username)
+
+    password_hash = cur.fetchone()
+
+    # take the result out
+    if password_hash is None:
+        return "invalid"
+    else:
+        #password_hash = cur.fetchone() #retrieve the first row
+        #print("Password: ", str(password_hash[0]))
+        return password_hash[0]
+
+
 def addIoTDevice(conn, deviceNAme, description):
     iot_device = (deviceNAme, description)
     sql = ''' INSERT INTO iotdevices(name, description)
@@ -296,7 +314,6 @@ def testingDatabse():
     removeIoTDevice(db_con, 1)
     # closing database connection
     closeDBConnection(db_con)
-    '''
 
     # open database connection
     db_con = createDBConnection(database_name)
@@ -305,7 +322,6 @@ def testingDatabse():
     # closing database connection
     closeDBConnection(db_con)
 
-    '''
     # open database connection
     db_con = createDBConnection(database_name)
     # remove a module
