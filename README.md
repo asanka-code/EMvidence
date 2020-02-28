@@ -4,11 +4,21 @@ Run the start.sh shell script to start the web service.
 
 TODO:
 
-1. Implement the login page.
-2. Implement the dashboard (user's home) page.
-3. Implement the extendable module page.
+Dashboard - 
+1. A summary of data and supported features of the framework.
 
-Dashboard functionalities:
+Settings -
+1. Add new user.
 
-1. Capture EM data - set the SDR settings, capture data, save to local disk, generate hash values.
-2. Select an ML architecture and train a model with data.
+Capture data -
+1. New SDR drivers that save data to cFiles and supporting Python code to convert cFiles to NumPy files.
+2. Generate the hash of the data file and insert to database.
+
+Analyse data - 
+1. Display analysis report on screen.
+2. Download analysis report button for a PDF file.
+
+General:
+1. Actual modules with trained ML models.
+2. Change theme color to dark grey or black.
+3. Add the ForSec group and UCD logos.
