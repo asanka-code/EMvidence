@@ -31,10 +31,8 @@ config_file_name = "emvidence.config"
 config = configparser.ConfigParser()
 config.read(config_file_name)
 
-app = Flask(__name__)
-
+app = Flask(__name__, static_folder="static", template_folder="templates")
 # file upload directory
-#app.config['UPLOAD_FOLDER'] = "/home/asanka/Documents/github/EMvidence/emvidence-gui/temp-modules"
 app.config['UPLOAD_FOLDER'] = config['general-settings']['temp-module-directory']
 
 #-------------------------------------------------------------------------------
