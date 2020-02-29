@@ -20,5 +20,3 @@ Analyse data -
 
 General:
 1. Actual modules with trained ML models.
-2. Change theme color to dark grey or black.
-3. Add the ForSec group and UCD logos.

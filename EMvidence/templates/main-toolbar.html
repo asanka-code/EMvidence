@@ -38,6 +38,11 @@
 </script>
 
 <style>
+
+  .header {
+    position: relative;
+  }
+
   .toolbar {
     font-size: 1em;
     width: 100%;
@@ -50,7 +55,18 @@
 </style>
 
 <div id="header">
-    <h1> EMvidence Dashboard</h1>
+    
+    <!-- <h1> EMvidence Dashboard</h1> -->
+    <hr width="100%">
+    <br/>
+
+    <div align="center">
+    <img src="{{ url_for('static', filename='img/emvidence-title.png') }}" alt="EMvidence Logo" width="1200px"> 
+    </div>
+
+    <br/>
+    <hr width="100%">
+
     <div class="toolbar">
       <button id="dashboard">Dashboard</button>
       <button id="reports">Reports</button>
@@ -75,8 +91,8 @@
         <option value="yellow">Add/Remove modules</option>
       </select>
       -->
-
     </div>
+    
     <br/>
-    <hr>
-    </div>
+    <hr width="100%">
+</div>
