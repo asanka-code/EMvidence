@@ -147,6 +147,11 @@ def capture_data():
   del data
   os.remove(directoryPath + "data.cfile")
 
+  # take file size in MB
+  file_stats = os.stat(directoryPath + str(file_name) + ".npy")
+  file_size = int(file_stats.st_size / (1024 * 1024) )
+  file_size = str(file_size) + "MB"
+
   # update the selected hash function
   config['general-settings']['temp-hash-function'] = str(hash_function)
 
@@ -162,7 +167,8 @@ def capture_data():
   with open(directoryPath + str(file_name) + '.npy', 'rb') as afile:
     buf = afile.read()
     hasher.update(buf)
-  config['general-settings']['temp-hash-value'] = str(hasher.hexdigest())
+  hash_value = hasher.hexdigest()
+  config['general-settings']['temp-hash-value'] = str(hash_value)
 
   # save new hash information to config file
   with open(config_file_name, 'w') as configfile:
@@ -189,8 +195,38 @@ def capture_data():
   # clear the memory
   del data
 
+  # making database entries for the dataset and EM trace
+  # TODO: Add a feature to have a single dataset ID and multiple EM trace files inside a directory structure
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+  # enter the dataset entry
+  dataset_id = database.addDataset(db_con, str(file_name), "no/directory/path/currently", "no description available", 1, 1)
+
+  # Create a directory for the dataset with the dataset ID
+  os.mkdir(directoryPath + str(dataset_id))
+
+  # move EM trace file into the dataset directory
+  shutil.move(directoryPath + str(file_name) + ".npy", directoryPath + str(dataset_id))
+
+  # enter the EM trace entry
+  database.addEMTrace(db_con, directoryPath + str(dataset_id) + "/" + str(file_name) + '.npy', str(hasher.hexdigest()), str(hash_function), dataset_id)
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+  # compose the response
+  response_body = {
+    "status" : "done",
+    "file_name" : str(file_name) + ".npy",
+    "file_size" : file_size,
+    "hash_type" : str(hash_function),
+    "hash_value" : str(hash_value)
+  }
+  
+  res = make_response(jsonify(response_body), 200)
+
   # sending a response
-  return "done"
+  return res
+  #return "done"
 
 
 #-------------------------------------------------------------------------------

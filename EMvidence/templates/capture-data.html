@@ -172,7 +172,13 @@
           xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
 
-              if (this.responseText == "done") {
+              // take the received JSON object
+              var response = JSON.parse(this.response);
+              
+              // take the status
+              var status = response["status"];
+
+              if (status == "done") {
                 // update progress bar status
                 progressLabel.text("Done!");
                 var val = progressbar.progressbar( "value" ) || 0;
@@ -183,7 +189,28 @@
 
                 // realoading the iframe to show the graphs of the captured data
                 var iframe = document.getElementById('captured-data-view');
-                iframe.src = iframe.src;
+                iframe.src = iframe.src;            
+
+                // take and the file name
+                var file_name = response["file_name"];                
+                var message= "File name: ";
+                message = message.concat(file_name);
+                document.getElementById("file_name_info").innerText = message;
+
+                // take the file size
+                var file_size = response["file_size"];
+                var message= "File size: ";
+                message = message.concat(file_size);
+                document.getElementById("file_size_info").innerText = message;
+
+                // take the hash type
+                var hash_type = response["hash_type"];
+                var message= "Hash value ";
+                message = message.concat("(", hash_type, "): ");
+                // take the hash value
+                var hash_value = response["hash_value"];
+                message = message.concat(hash_value);                
+                document.getElementById("hash_info").innerText = message;                               
 
               } else {
                 // update progress bar status
@@ -291,8 +318,18 @@
     <!-- progress bar to indicate the progress of data capture -->
     <div id="progressbar"><div class="progress-label">This content will never be visible.</div></div>
 
+
     <div class="visualize-data" id="visualize-data">
-      <iframe src="/captured_data_view" style="border:none;", name="captured-data-view", id="captured-data-view", width="100%", height="100%"></iframe>
+      <fieldset>
+        <legend>Captured Data</legend>
+        <table>
+          <tr> <td> <div id="file_name_info" name="file_name_info"></div> </td> </tr>
+          <tr> <td id="file_size_info"></td> </tr>
+          <tr> <td id="hash_info"></td> </tr> 
+        </table>
+      </fieldset>
+
+      <iframe src="/captured_data_view" style="border:none;", name="captured-data-view", id="captured-data-view", width="100%", height="100%"></iframe>    
     </div>
 
     
