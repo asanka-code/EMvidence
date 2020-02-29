@@ -1,6 +1,9 @@
-import cosine_wave_zmq_pub
-import hackrf_zmq_pub
-import rtlsdr_zmq_pub
+import hackrf_cfile
+import rtlsdr_cfile
+import cosine_cfile
+#import cosine_wave_zmq_pub
+#import hackrf_zmq_pub
+#import rtlsdr_zmq_pub
 import sys
 import time
 
@@ -11,11 +14,14 @@ sampling_rate = int(sys.argv[3])
 
 # take the correct grc python file
 if sdr_name == "hackrf":
-    grc = hackrf_zmq_pub.top_block()
+    #grc = hackrf_zmq_pub.top_block()
+    grc = hackrf_cfile.top_block()
 elif sdr_name == "rtlsdr":
-    grc = rtlsdr_zmq_pub.top_block()
+    grc = rtlsdr_cfile.top_block()
+elif sdr_name == "cosine":
+    grc = rtlsdr_cfile.top_block()
 else:
-    grc = cosine_wave_zmq_pub.top_block()
+    grc = cosine_cfile.top_block()
 
 # setting the center frequency
 grc.set_center_freq(center_freq)

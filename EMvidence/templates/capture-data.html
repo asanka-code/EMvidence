@@ -222,6 +222,7 @@
             <td>
               <label>SDR Device:</label>
               <select id = "sdr-device">
+                <option value = "cosine">Cosine Generator</option>
                 <option value = "rtlsdr">RTL-SDR</option>
                 <option value = "hackrf" selected="selected">HackRF One</option>
               </select>
@@ -253,12 +254,11 @@
             <td>            
               <label>Sampling duration:</label>
                 <select id = "sampling-duration">
-                  <option value = "10" selected="selected">10 ms</option>
-                  <option value = "50">50 ms</option>
-                  <option value = "100">100 ms</option>
-                  <option value = "200">200 ms</option>
-                  <option value = "500">500 ms</option>
-                  <option value = "1000">1000 ms</option>
+                  <option value = "1" selected="selected">1 second</option>
+                  <option value = "2">2 seconds</option>
+                  <option value = "4">4 seconds</option>
+                  <option value = "8">8 seconds</option>
+                  <option value = "10">10 seconds</option>                  
                 </select>
             </td>
           </tr>

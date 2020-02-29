@@ -125,16 +125,27 @@ def capture_data():
   # start the grc script with the parameters
   pro = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
 
-  # path to the data directory according to the config file
-  directoryPath = str(config['general-settings']['temp-data-directory'])
-
-  # capture the data  
+  # wait the specified sampling duration to capture tdata  
+  time.sleep(int(sampling_duration))
+  '''
   zmqSocket = iq.startZMQClient(tcpHostPort="tcp://127.0.0.1:5557", socketType="SUB")
   iq.genSingleTraceFile(zmqSocket, directoryPath, str(file_name), windowSize=int(sampling_duration))
   iq.stopZMQClient(zmqSocket)
+  '''
 
   # stop the grc script
   os.killpg(os.getpgid(pro.pid), signal.SIGTERM)  # Send the signal to all the process groups
+
+  # path to the data directory according to the config file
+  directoryPath = str(config['general-settings']['temp-data-directory'])
+
+  # convert the cFile to NumPy
+  data = iq.getData(directoryPath + "data.cfile")
+  np.save(directoryPath + str(file_name) + ".npy", data)
+
+  # delete temporary array and temporary file
+  del data
+  os.remove(directoryPath + "data.cfile")
 
   # update the selected hash function
   config['general-settings']['temp-hash-function'] = str(hash_function)
@@ -158,7 +169,10 @@ def capture_data():
     config.write(configfile)
 
   # load the data for graphing
-  data = np.load(directoryPath + str(file_name) + '.npy')
+  data = np.load(directoryPath + str(file_name) + '.npy', mmap_mode='r')
+
+  # take only a segment to plot
+  data = data[0:10000]
 
   # plot the waveform graph
   graph_file_name = directoryPath + str(config['general-settings']['default-waveform-file'])

@@ -3,7 +3,7 @@
 ##################################################
 # GNU Radio Python Flow Graph
 # Title: Top Block
-# Generated: Sat Feb  8 00:22:08 2020
+# Generated: Sat Feb 29 16:22:37 2020
 ##################################################
 
 
@@ -21,7 +21,6 @@ from gnuradio import analog
 from gnuradio import blocks
 from gnuradio import eng_notation
 from gnuradio import gr
-from gnuradio import zeromq
 from gnuradio.eng_option import eng_option
 from gnuradio.filter import firdes
 from grc_gnuradio import wxgui as grc_wxgui
@@ -45,8 +44,9 @@ class top_block(grc_wxgui.top_block_gui):
         ##################################################
         # Blocks
         ##################################################
-        self.zeromq_pub_sink_0 = zeromq.pub_sink(gr.sizeof_gr_complex, 1, 'tcp://127.0.0.1:5557', 1, False, -1)
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, './data/data.cfile', False)
+        self.blocks_file_sink_0.set_unbuffered(False)
         self.blocks_add_xx_0 = blocks.add_vcc(1)
         self.analog_sig_source_x_1 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, 5e6, 1, 0)
         self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, center_freq, 1, 0)
@@ -57,7 +57,7 @@ class top_block(grc_wxgui.top_block_gui):
         self.connect((self.analog_sig_source_x_0, 0), (self.blocks_add_xx_0, 0))
         self.connect((self.analog_sig_source_x_1, 0), (self.blocks_add_xx_0, 1))
         self.connect((self.blocks_add_xx_0, 0), (self.blocks_throttle_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.zeromq_pub_sink_0, 0))
+        self.connect((self.blocks_throttle_0, 0), (self.blocks_file_sink_0, 0))
 
     def get_samp_rate(self):
         return self.samp_rate
