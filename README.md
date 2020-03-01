@@ -19,3 +19,8 @@ Analyse data -
 
 General:
 1. Actual modules with trained ML models.
+
+## Requirements:
+
+1. Disabling Web browser caching (Firefox) :
+    Type in the address bar **about:config**, then press the button **i'l be careful i promise**. Then type in the bar **browser.cache.disk.enable**. Then double click on it to make it  **false**. Do the same with **browser.cache.memory.enable**. Then, exit firefox and restart-it.

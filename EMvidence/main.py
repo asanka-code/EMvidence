@@ -98,6 +98,10 @@ def plot():
 #-------------------------------------------------------------------------------
 @app.route("/capture-data", methods=['POST', 'GET'])
 def capture_data():
+
+  # reading the configuration file
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
   
   # take the settings sent from the UI
   sdr = request.form['sdr']
@@ -180,17 +184,57 @@ def capture_data():
   # take only a segment to plot
   data = data[0:10000]
 
+  # set the sampling rate of the emvincelib library settings
+  iq.sampleRate = int(sampling_rate)
+  print("Sampling rate of emvincelib: " + str(iq.sampleRate))
+
+
+  # reading the configuration file
+  #config = configparser.ConfigParser()
+  #config.read(config_file_name)
+
+  # removing old graph files
+  old_graph_file_name = directoryPath + "waveform." + str(config['general-settings']['figure-sequence_number']) + ".png"
+  os.remove(old_graph_file_name)
+  old_graph_file_name = directoryPath + "fft." + str(config['general-settings']['figure-sequence_number']) + ".png"
+  os.remove(old_graph_file_name)
+  old_graph_file_name = directoryPath + "spectrogram." + str(config['general-settings']['figure-sequence_number']) + ".png"
+  os.remove(old_graph_file_name)
+  
+  # generate a random sequence number
+  sequence_number = random.randint(1,1000)
+
   # plot the waveform graph
-  graph_file_name = directoryPath + str(config['general-settings']['default-waveform-file'])
-  iq.plotWaveform(data, show=0, file_name=graph_file_name, file_format='png')
+  new_graph_file_name = directoryPath + "waveform." + str(sequence_number) + ".png"
+  iq.plotWaveform(data, show=0, file_name=new_graph_file_name, file_format='png')
+
+  # plot PSD graph
+  new_graph_file_name = directoryPath + "fft." + str(sequence_number) + ".png"
+  iq.plotPSD(data, show=0, file_name=new_graph_file_name, file_format='png')
+  
+  # plot spectrogram
+  new_graph_file_name = directoryPath + "spectrogram." + str(sequence_number) + ".png"
+  iq.plotSpectrogram(data, show=0, file_name=new_graph_file_name, file_format='png')
+
+  # updating the figure sequence number
+  config['general-settings']['figure-sequence_number'] = str(sequence_number)
+  # save new settings to the config file
+  with open(config_file_name, 'w') as configfile:
+    config.write(configfile)
+
+
+
+  # plot the waveform graph
+  #graph_file_name = directoryPath + str(config['general-settings']['default-waveform-file'])
+  #iq.plotWaveform(data, show=0, file_name=graph_file_name, file_format='png')
 
   # plot the PSD graph
-  graph_file_name = directoryPath + str(config['general-settings']['default-fft-file'])
-  iq.plotPSD(data, show=0, file_name=graph_file_name, file_format='png')
+  #graph_file_name = directoryPath + str(config['general-settings']['default-fft-file'])
+  #iq.plotPSD(data, show=0, file_name=graph_file_name, file_format='png')
 
   # plot the spectrogram graph
-  graph_file_name = directoryPath + str(config['general-settings']['default-spectrogram-file'])
-  iq.plotSpectrogram(data, show=0, file_name=graph_file_name, file_format='png')
+  #graph_file_name = directoryPath + str(config['general-settings']['default-spectrogram-file'])
+  #iq.plotSpectrogram(data, show=0, file_name=graph_file_name, file_format='png')
 
   # clear the memory
   del data
@@ -237,18 +281,43 @@ def captured_data_view(name=None):
 #-------------------------------------------------------------------------------
 @app.route("/get_waveform", methods=['POST', 'GET'])
 def get_waveform():
-  return send_file('./data/temp-waveform-graph.png', mimetype='image/png')
+
+  # reading the configuration file
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
+
+  # path to the graph file
+  graph_file = str(config['general-settings']['temp-data-directory']) + "waveform." + str(config['general-settings']['figure-sequence_number']) + ".png"
+
+  return send_file(graph_file, mimetype='image/png')
+  #return send_file('./data/temp-waveform-graph.png', mimetype='image/png')
 
 
 #-------------------------------------------------------------------------------
 @app.route("/get_fft")
 def get_fft():
-  return send_file('./data/temp-fft-graph.png', mimetype='image/png')
+  # reading the configuration file
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
+
+  # path to the graph file
+  graph_file = str(config['general-settings']['temp-data-directory']) + "fft." + str(config['general-settings']['figure-sequence_number']) + ".png"
+
+  return send_file(graph_file, mimetype='image/png')
+  #return send_file('./data/temp-fft-graph.png', mimetype='image/png')
 
 #-------------------------------------------------------------------------------
 @app.route("/get_spectrogram")
 def get_spectrogram():
-  return send_file('./data/temp-spectrogram-graph.png', mimetype='image/png')
+  # reading the configuration file
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
+
+  # path to the graph file
+  graph_file = str(config['general-settings']['temp-data-directory']) + "spectrogram." + str(config['general-settings']['figure-sequence_number']) + ".png"
+
+  return send_file(graph_file, mimetype='image/png')
+  #return send_file('./data/temp-spectrogram-graph.png', mimetype='image/png')
 
 
 #-------------------------------------------------------------------------------
@@ -327,7 +396,36 @@ def cancel_analysis():
 #-------------------------------------------------------------------------------
 @app.route("/get_dataset_list", methods=['POST', 'GET'])
 def get_dataset_list():
-  
+
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+
+  # take the data
+  cursor = database.getEMTraces(db_con)
+
+  # result count
+  count = 0
+
+  # response skeleton
+  response_body = {"length" : count, }
+
+  # take first row of results
+  result = cursor.fetchone()
+
+  # process all the results
+  while result is not None:
+    count = count + 1
+    # add the this EM trace result to the JSON object
+    response_body[str(count)] = {"value" : str(result[0]), "text" : str(result[1])}
+    result = cursor.fetchone()
+
+  # update the response count
+  response_body["length"] = count
+
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+  '''
   response_body = {
     "length" : 2,
     "1" : {
@@ -339,6 +437,7 @@ def get_dataset_list():
       "text" : "RaspberryPi case data"
     }
   }
+  '''
   
   res = make_response(jsonify(response_body), 200)
   return res

@@ -172,6 +172,14 @@ def addEMTrace(conn, filename, hash_value, hash_function, dataset_id):
     conn.commit()
     return cur.lastrowid
 
+def getEMTraces(conn):
+    sql = ''' SELECT * FROM emtraces; '''
+    cur = conn.cursor()
+    cur.execute(sql)
+    #task = cur.fetchone() #retrieve the first row
+    #print(task) #Print the first column retrieved(user's name)
+    return cur
+
 def removeEMTrace(conn, emTraceID):
     dataset = (emTraceID,)
     sql = ''' DELETE FROM emtraces WHERE id=?; '''

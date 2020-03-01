@@ -380,7 +380,8 @@ def plotSpectrogram(data, show=1, file_name='./spectrogram.pdf', file_format='pd
     
     # plot the spectrogram of the selected sample range
     #plt.specgram(data, NFFT=4096, Fs=sampleRate, cmap=plt.cm.get_cmap("Greys"))
-    plt.specgram(data, NFFT=4096, Fs=sampleRate)
+    #plt.specgram(data, NFFT=4096, Fs=sampleRate)
+    plt.specgram(data, NFFT=1024, Fs=sampleRate)
     plt.xlabel("Time (s)")
     plt.ylabel("Frequency (MHz)")
     #plt.axis('off')
@@ -390,7 +391,7 @@ def plotSpectrogram(data, show=1, file_name='./spectrogram.pdf', file_format='pd
     
     # zoom in to the middle of the y-axis because 4 MHz band-pass in the GRC script has caused the
     # other y-axis frequency ranges to be highly attenuated and useless.
-    plt.ylim(-2000000, 2000000)    
+    #plt.ylim(-2000000, 2000000)    
     
     if(show==1):
         plt.show()
