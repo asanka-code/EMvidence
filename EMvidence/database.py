@@ -180,6 +180,14 @@ def getEMTraces(conn):
     #print(task) #Print the first column retrieved(user's name)
     return cur
 
+def getEMTracePath(conn, traceID):
+    trace = (traceID,)
+    sql = ''' SELECT * FROM emtraces WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, trace)
+    trace_row = cur.fetchone() #retrieve the first row    
+    return trace_row[1]
+
 def removeEMTrace(conn, emTraceID):
     dataset = (emTraceID,)
     sql = ''' DELETE FROM emtraces WHERE id=?; '''

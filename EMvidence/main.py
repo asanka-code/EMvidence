@@ -278,6 +278,12 @@ def capture_data():
 def captured_data_view(name=None):
   return render_template('captured_data_view_iframe.html', name=name)
 
+
+#-------------------------------------------------------------------------------
+@app.route("/analysis_report_view")
+def analysis_report_view(name=None):
+  return render_template('analysis_report_view_iframe.html', name=name)
+
 #-------------------------------------------------------------------------------
 @app.route("/get_waveform", methods=['POST', 'GET'])
 def get_waveform():
@@ -362,6 +368,20 @@ def analze_data():
   dataset_choice = request.form['dataset_choice']
   iot_device_type = request.form['iot_device_type']
 
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+  # get the path to the selected EM trace
+  emtrace_path = database.getEMTracePath(db_con, int(dataset_choice))
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+
+  # result count
+  count = 0
+
+  # response skeleton
+  response_body = {"length" : count, }
+
   # take the selected module ids as a string
   selected_modules = request.form['selected_modules']
   # split the module id string into individual id elements in an array
@@ -382,9 +402,19 @@ def analze_data():
     mod = loadModule(module_path)
     # calling module functions
     mod.initialize(1)
-    mod.preprocess("/path/to/em-trace")
+    results = mod.getResults(str(emtrace_path))
+    print("Module results: " + str(results))
 
-  return "done"
+    # add this result to the JSON object
+    count = count + 1
+    response_body[str(count)] = {"module_name" : str(module_name), "result" : str(results)}
+
+  # update the response count
+  response_body["length"] = count
+
+  res = make_response(jsonify(response_body), 200)
+  return res
+  #return "done"
 
 
 #-------------------------------------------------------------------------------

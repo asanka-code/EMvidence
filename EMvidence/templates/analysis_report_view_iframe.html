@@ -1,0 +1,31 @@
+<fieldset>
+  <legend>Analysis Summary</legend> 
+
+      <table>
+        <tr>
+          <td>
+            <fieldset>
+            <legend>Module 1</legend>
+              <!-- <img src="{{ url_for('static', filename='img/temp-waveform-graph.png') }}" alt="my plot" id="waveform-graph"> -->
+              <img src="/get_waveform" alt="my plot" id="waveform-graph">
+            </fieldset>
+          </td>
+          <td>
+            <fieldset>
+              <legend>Module 2</legend>
+                <img src="/get_fft" alt="my plot" id="fft-graph">
+            </fieldset>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <fieldset>
+              <legend>Module 3</legend>
+                <img src="/get_spectrogram" alt="my plot" id="spectrogram-graph">
+            </fieldset>
+          </td>
+        </tr>
+      </table>
+
+</fieldset>

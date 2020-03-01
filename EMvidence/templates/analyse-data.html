@@ -119,7 +119,23 @@
           xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
 
-              if (this.responseText == "done") {
+              // take the received JSON object
+              var response = JSON.parse(this.response);
+              
+              // take the number of IoT devices
+              var len = parseInt(response["length"]);                        
+
+              //if (this.responseText == "done") {
+              if (len>0) {
+
+                // add the result of each module to the table
+                for (var i=1; i<=len; i++) {                          
+                  content = response[i.toString()]['module_name'];
+                  content = content.concat(": ", response[i.toString()]['result']);                                
+                  row = document.getElementById("classification-results").insertRow(0);
+                  row.insertCell(0).innerHTML = response[i.toString()]['module_name'];
+                  row.insertCell(1).innerHTML = response[i.toString()]['result'];                
+                }
                 
                 // update progress bar status
                 progressLabel.text("Done!");
@@ -130,8 +146,8 @@
                 document.getElementById("visualize-data").style.visibility = "visible";
 
                 // realoading the iframe to show the results of the analysis
-                var iframe = document.getElementById('captured-data-view');
-                iframe.src = iframe.src;
+               // var iframe = document.getElementById('captured-data-view');
+                //iframe.src = iframe.src;
 
               } else {
                 // update progress bar status
@@ -172,8 +188,8 @@
                 document.getElementById("visualize-data").style.visibility = "hidden";
 
                 // realoading the iframe to show the results of the analysis
-                var iframe = document.getElementById('captured-data-view');
-                iframe.src = iframe.src;
+                //var iframe = document.getElementById('captured-data-view');
+                //iframe.src = iframe.src;
 
               } else {
                 // update progress bar status
@@ -381,7 +397,13 @@
     <div id="progressbar"><div class="progress-label">This content will never be visible.</div></div>
 
     <div class="visualize-data" id="visualize-data">
-      <iframe src="/captured_data_view" style="border:none;", name="captured-data-view", id="captured-data-view", width="100%", height="100%"></iframe>
+
+      <fieldset>
+        <legend>Analysis Summary</legend> 
+        <table id="classification-results" name="classification-results">          
+        </table>
+      </fieldset>
+      <!-- <iframe src="/analysis_report_view" style="border:none;", name="captured-data-view", id="captured-data-view", width="100%", height="100%"></iframe> -->
     </div>
 
 
