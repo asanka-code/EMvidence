@@ -52,9 +52,15 @@ def settings(name=None):
   return render_template('settings.html', name=name)
 
 #-------------------------------------------------------------------------------
+@app.route("/upload-data")
+def upload_data(name=None):
+  return render_template('upload-data.html', name=name)
+
+#-------------------------------------------------------------------------------
 @app.route("/capture")
 def capture(name=None):
   return render_template('capture-data.html', name=name)
+
 
 #-------------------------------------------------------------------------------
 @app.route("/analyse")
@@ -94,6 +100,164 @@ def plot():
   output = io.BytesIO()
   FigureCanvas(fig).print_png(output)
   return Response(output.getvalue(), mimetype='image/png')
+
+#-------------------------------------------------------------------------------
+@app.route("/upload-the-data-file", methods=['POST', 'GET'])
+def upload_the_data_file():
+
+  #print("IMPORTANT: upload_the_data_file() called")
+
+  # reading the configuration file
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
+  
+  # take the settings sent from the UI
+  sdr = request.form['sdr']
+  center_frequency = request.form['center_frequency']
+  center_frequency_scale = request.form['center_frequency_scale']
+  sampling_rate = request.form['sampling_rate']
+  hash_function = request.form['hash_function']
+
+  # convert the center frequency in the correct format 
+  center_frequency = int(center_frequency)
+  if center_frequency_scale == "H":
+    center_frequency = center_frequency
+  elif center_frequency_scale == "K":
+    center_frequency = center_frequency * 1000
+  elif center_frequency_scale == "M":
+    center_frequency = center_frequency * 1000000
+  elif center_frequency_scale == "G":
+    center_frequency = center_frequency * 1000000000
+
+  # path to the data directory according to the config file
+  directoryPath = str(config['general-settings']['temp-data-directory'])
+
+  # saving the uploaded datafile to a temporary directory
+  if request.method == 'POST':
+    f = request.files['fileToUpload']
+    f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+
+  # convert the cFile to NumPy
+  data = iq.getData(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+  # cFile file name without file extension
+  file_name_without_extension = f.filename.split(".")[0]
+  np.save(app.config['UPLOAD_FOLDER'] + "/" + str(file_name_without_extension) + ".npy", data)
+  # moving NumPy file to the data directory
+  shutil.move(app.config['UPLOAD_FOLDER'] + "/" + str(file_name_without_extension) + ".npy", directoryPath)
+  # delete temporary array and temporary file
+  del data
+  os.remove(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+
+  # take file size in MB
+  file_stats = os.stat(directoryPath + str(file_name_without_extension) + ".npy")
+  file_size = int(file_stats.st_size / (1024 * 1024) )
+  file_size = str(file_size) + "MB"
+
+  # update the selected hash function
+  config['general-settings']['temp-hash-function'] = str(hash_function)
+
+  # select the hash function picked by the user
+  if hash_function == "md5":
+    hasher = hashlib.md5()
+  elif hash_function == "sha1":
+    hasher = hashlib.sha1()
+  elif hash_function == "sha256":
+    hasher = hashlib.sha256()
+
+  # calculating the hash value and set to the config field
+  with open(directoryPath + str(file_name_without_extension) + '.npy', 'rb') as afile:
+    buf = afile.read()
+    hasher.update(buf)
+  hash_value = hasher.hexdigest()
+  config['general-settings']['temp-hash-value'] = str(hash_value)
+
+  # save new hash information to config file
+  with open(config_file_name, 'w') as configfile:
+    config.write(configfile)
+
+  # load the data for graphing
+  data = np.load(directoryPath + str(file_name_without_extension) + '.npy', mmap_mode='r')
+
+  # take only a segment to plot
+  data = data[0:10000]
+
+  # set the sampling rate of the emvincelib library settings
+  iq.sampleRate = int(sampling_rate)
+  print("Sampling rate of emvincelib: " + str(iq.sampleRate))
+
+  # removing old graph files
+  old_graph_file_name = directoryPath + "waveform." + str(config['general-settings']['figure-sequence_number']) + ".png"
+  os.remove(old_graph_file_name)
+  old_graph_file_name = directoryPath + "fft." + str(config['general-settings']['figure-sequence_number']) + ".png"
+  os.remove(old_graph_file_name)
+  old_graph_file_name = directoryPath + "spectrogram." + str(config['general-settings']['figure-sequence_number']) + ".png"
+  os.remove(old_graph_file_name)
+  
+  # generate a random sequence number
+  sequence_number = random.randint(1,1000)
+
+  # plot the waveform graph
+  new_graph_file_name = directoryPath + "waveform." + str(sequence_number) + ".png"
+  iq.plotWaveform(data, show=0, file_name=new_graph_file_name, file_format='png')
+
+  # plot PSD graph
+  new_graph_file_name = directoryPath + "fft." + str(sequence_number) + ".png"
+  iq.plotPSD(data, show=0, file_name=new_graph_file_name, file_format='png')
+  
+  # plot spectrogram
+  new_graph_file_name = directoryPath + "spectrogram." + str(sequence_number) + ".png"
+  iq.plotSpectrogram(data, show=0, file_name=new_graph_file_name, file_format='png')
+
+  # updating the figure sequence number
+  config['general-settings']['figure-sequence_number'] = str(sequence_number)
+  # save new settings to the config file
+  with open(config_file_name, 'w') as configfile:
+    config.write(configfile)
+
+  # clear the memory
+  del data
+
+  # making database entries for the dataset and EM trace
+  # TODO: Add a feature to have a single dataset ID and multiple EM trace files inside a directory structure
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+  # enter the dataset entry
+  dataset_id = database.addDataset(db_con, str(file_name_without_extension), "no/directory/path/currently", "no description available", 1, 1)
+
+  # Create a directory for the dataset with the dataset ID
+  os.mkdir(directoryPath + str(dataset_id))
+
+  # move EM trace file into the dataset directory
+  shutil.move(directoryPath + str(file_name_without_extension) + ".npy", directoryPath + str(dataset_id))
+
+  # enter the EM trace entry
+  database.addEMTrace(db_con, directoryPath + str(dataset_id) + "/" + str(file_name_without_extension) + '.npy', str(center_frequency), str(sampling_rate), str(hasher.hexdigest()), str(hash_function), dataset_id)
+  # closing database connection
+  database.closeDBConnection(db_con)
+
+  # compose the response
+  response_body = {
+    "status" : "done",
+    "file_name" : str(file_name_without_extension) + ".npy",
+    "file_size" : file_size,
+    "hash_type" : str(hash_function),
+    "hash_value" : str(hash_value)
+  }
+  
+  res = make_response(jsonify(response_body), 200)
+
+  # sending a response
+  return res
+  #return "done"
+  
+
+
+
+
+
+
+
+
 
 #-------------------------------------------------------------------------------
 @app.route("/capture-data", methods=['POST', 'GET'])
@@ -253,7 +417,7 @@ def capture_data():
   shutil.move(directoryPath + str(file_name) + ".npy", directoryPath + str(dataset_id))
 
   # enter the EM trace entry
-  database.addEMTrace(db_con, directoryPath + str(dataset_id) + "/" + str(file_name) + '.npy', str(hasher.hexdigest()), str(hash_function), dataset_id)
+  database.addEMTrace(db_con, directoryPath + str(dataset_id) + "/" + str(file_name) + '.npy', str(center_frequency), str(sampling_rate), str(hasher.hexdigest()), str(hash_function), dataset_id)
   # closing database connection
   database.closeDBConnection(db_con)
 
@@ -645,6 +809,36 @@ def delete_module():
   # closing database connection
   database.closeDBConnection(db_con)
 
+  return "done"
+
+#-------------------------------------------------------------------------------
+@app.route("/delete_dataset", methods=['POST', 'GET'])
+def delete_dataset():
+  # take the choices made by the user
+  emtrace_to_delete = request.form['dataset_to_delete']
+  
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+
+  # get the ID of the dataset
+  dataset_to_delete = database.getDatasetIDofEMTrace(db_con, int(emtrace_to_delete))
+
+  dataset_directory = config['general-settings']['temp-data-directory'] + str(dataset_to_delete)
+
+  print("EM trace ID to be deleted: " + str(emtrace_to_delete))
+  print("Dataset ID to be deleted: " + str(dataset_to_delete))
+  print("The directory to be deleted: " + str(dataset_directory))
+
+  # delete dataset files
+  shutil.rmtree(str(dataset_directory))
+
+  # delete dataset and emtrace information from the database
+  database.removeDataset(db_con, int(dataset_to_delete))
+  database.removeEMTrace(db_con, int(emtrace_to_delete))
+
+  # closing database connection
+  database.closeDBConnection(db_con)
+  
   return "done"
 
 #-------------------------------------------------------------------------------

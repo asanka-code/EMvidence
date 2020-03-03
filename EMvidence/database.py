@@ -159,14 +159,14 @@ def removeDataset(conn, datasetID):
     conn.commit()
     return cur.lastrowid
 
-def addEMTrace(conn, filename, hash_value, hash_function, dataset_id):
+def addEMTrace(conn, filename, center_frequency, sampling_rate, hash_value, hash_function, dataset_id):
     # dataset addition timestamp
     timestamp = time.time()
     timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
     # new dataset attributes
-    new_EM_trace = (filename, hash_value, hash_function, timestamp, dataset_id)
-    sql = ''' INSERT INTO emtraces(filename, hash_value, hash_function, timestamp, dataset_id)
-              VALUES(?,?,?,?,?); '''
+    new_EM_trace = (filename, center_frequency, sampling_rate, hash_value, hash_function, timestamp, dataset_id)
+    sql = ''' INSERT INTO emtraces(filename, center_frequency, sampling_rate, hash_value, hash_function, timestamp, dataset_id)
+              VALUES(?,?,?,?,?,?,?); '''
     cur = conn.cursor()
     cur.execute(sql, new_EM_trace)
     conn.commit()
@@ -187,6 +187,14 @@ def getEMTracePath(conn, traceID):
     cur.execute(sql, trace)
     trace_row = cur.fetchone() #retrieve the first row    
     return trace_row[1]
+
+def getDatasetIDofEMTrace(conn, traceID):
+    trace = (traceID,)
+    sql = ''' SELECT * FROM emtraces WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, trace)
+    trace_row = cur.fetchone() #retrieve the first row    
+    return trace_row[7]
 
 def removeEMTrace(conn, emTraceID):
     dataset = (emTraceID,)
@@ -240,6 +248,8 @@ def initializeDB(database_name):
     sql_create_emtraces_table = """ CREATE TABLE IF NOT EXISTS emtraces (
                                         id integer PRIMARY KEY,
                                         filename text NOT NULL,
+                                        center_frequency NOT NULL,
+                                        sampling_rate NOT NULL,
                                         hash_value text NOT NULL, 
                                         hash_function text NOT NULL,
                                         timestamp text NOT NULL,                                   
@@ -285,7 +295,7 @@ def initializeDB(database_name):
         print("Tables are created...")
 
         # create the admin user
-        createUser(db_con, 'admin', 'admin-hash', 'this is the admin')
+        createUser(db_con, 'emvidence', '0a554b05b62ec7fca59f9e6bc8f93be075e4bcc6', 'This is the generic user accout')        
         print("Created the admin user...")
 
     else:
@@ -296,82 +306,90 @@ def initializeDB(database_name):
 
 ########################################################
 
-def testingDatabse():
-    '''
+def generateDatabse():
     # initialize the database - only once
     initializeDB(database_name)
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # updating the login timestamp
-    updateLoginTimestamp(db_con, 1)
+    #updateLoginTimestamp(db_con, 1)
     # closing database connection
-    closeDBConnection(db_con)
+    #closeDBConnection(db_con)
 
-    time.sleep(10)
+    #time.sleep(10)
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # updating the login timestamp
-    updateLogoutTimestamp(db_con, 1)
+    #updateLogoutTimestamp(db_con, 1)
     # closing database connection
-    closeDBConnection(db_con)
+    #closeDBConnection(db_con)
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # add IoT device
-    addIoTDevice(db_con, "Raspberry Pi 3B+", "This is the model 3 B+ of Raspberry Pi device.")
+    #addIoTDevice(db_con, "Raspberry Pi 3B+", "This is the model 3 B+ of Raspberry Pi device.")
     # closing database connection
-    closeDBConnection(db_con)
+    #closeDBConnection(db_con)
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # add IoT device
-    removeIoTDevice(db_con, 1)
+    #removeIoTDevice(db_con, 1)
     # closing database connection
-    closeDBConnection(db_con)
+    #closeDBConnection(db_con)
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # add new module
-    addModule(db_con, "New module 5", "This is a new module that perform crytography detection", 1)
+    #addModule(db_con, "New module 5", "This is a new module that perform crytography detection", 1)
     # closing database connection
-    closeDBConnection(db_con)
+    #closeDBConnection(db_con)
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # remove a module
-    removeModule(db_con, 1)
+    #removeModule(db_con, 1)
     # closing database connection
-    closeDBConnection(db_con) 
+    #closeDBConnection(db_con) 
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # add new dataset
-    addDataset(db_con, "Suspect Dataset", "directory/path", "This is a dataset acquired from a suspect device", 1, 1)
+    #addDataset(db_con, "Suspect Dataset", "directory/path", "This is a dataset acquired from a suspect device", 1, 1)
     # closing database connection
-    closeDBConnection(db_con)
+    #closeDBConnection(db_con)
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # remove dataset
-    removeDataset(db_con, 1)
+    #removeDataset(db_con, 1)
     # closing database connection
-    closeDBConnection(db_con)
+    #closeDBConnection(db_con)
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # add new EM trace
-    addEMTrace(db_con, "file1", "hashvalue", "sha1", 1)
+    #addEMTrace(db_con, "./the/path/to/file", '228000000', '20000000', 'weiureoifrfjahreurh', 'sha256', 1)
     # closing database connection
-    closeDBConnection(db_con)
+    #closeDBConnection(db_con)
 
     # open database connection
-    db_con = createDBConnection(database_name)
+    #db_con = createDBConnection(database_name)
     # remove EM trace
-    removeEMTrace(db_con, 1)
+    #removeEMTrace(db_con, 1)
     # closing database connection
-    closeDBConnection(db_con)
-    '''
+    #closeDBConnection(db_con)
+    
+    # username: emvidence
+    # password: emvidence
+    # sha1 hash of the password: 0a554b05b62ec7fca59f9e6bc8f93be075e4bcc6
+    #db_con = createDBConnection(database_name)
+    # updating the login timestamp
+    #createUser(db_con, 'emvidence', '0a554b05b62ec7fca59f9e6bc8f93be075e4bcc6', 'This is the generic user accout')
+    # closing database connection
+    #closeDBConnection(db_con)
 
-#testingDatabse()
+# Generate the databse with the generic user account
+#generateDatabse()

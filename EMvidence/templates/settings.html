@@ -42,6 +42,8 @@
           setModuleSelectionList();
           // set the IoT devices selection menu
           setIoTDeviceSelectionList();
+          // set the datasets selection menu
+          setDatasetSelectionList();
         } );
 
         $( function() {
@@ -54,6 +56,14 @@
 
         $( function() {
           $( "#select-module-to-delete" ).selectmenu(
+            {
+              width: 400
+            }
+          );
+        } );
+
+        $( function() {
+          $( "#select-dataset-to-delete" ).selectmenu(
             {
               width: 400
             }
@@ -170,6 +180,49 @@
           xhttp.open("POST", "/delete_module", true);
           xhttp.send(formData);
         }
+
+        $( function() {          
+          $( ".dataset-delete-widget input[type=button]" ).button();
+          $( "#delete-dataset" ).click( function( event ) {
+            event.preventDefault();
+            // send the module deletion AJAX request
+            deleteDataset();
+          } );
+
+          $( "#cancel-delete-dataset" ).click( function( event ) {
+            event.preventDefault();
+            window.location.href = "/settings";            
+          } );
+        } );
+
+        function deleteDataset() {            
+          // a form data object
+          var formData = new FormData();
+
+          // take the selected em data format index
+          var dataset_to_delete = document.getElementById("select-dataset-to-delete");
+          dataset_to_delete = dataset_to_delete.options[dataset_to_delete.selectedIndex].value;
+          // append sampling rate choice to the form data object
+          formData.append("dataset_to_delete", dataset_to_delete);
+
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              if (this.responseText == "done") {                                          
+                alert("Dataset deleted!");
+                // refresh the settings page
+                window.location.href = "/settings";
+              } else {
+                alert("Error occured while deleting!");
+              }
+            }
+          };
+
+          // send the AJAX request
+          xhttp.open("POST", "/delete_dataset", true);
+          xhttp.send(formData);
+        }
+
                 
         function fillDefaultDirectory() {
           var xhttp = new XMLHttpRequest();
@@ -283,6 +336,36 @@
           // send the AJAX request
           xhttp.open("POST", "/add-iot-device", true);
           xhttp.send(formData);
+        }
+        
+
+        function setDatasetSelectionList() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+              // take the received JSON object
+              var response = JSON.parse(this.response);
+              
+              // take the number of IoT devices
+              var len = parseInt(response["length"]);
+
+              // process each IoT device
+              for (var i=1; i<=len; i++) {          
+                // add the option to the select menu
+                $('#select-dataset-to-delete').append($('<option>', {
+                  value: response[i.toString()]["value"],
+                  text: response[i.toString()]["text"]
+                }));
+              }
+              
+              // refresh the select menu to make the newly added options visible
+              $( "#select-dataset-to-delete" ).selectmenu("refresh", true);
+            }
+          };
+          // send the AJAX request
+          xhttp.open("POST", "/get_dataset_list", true);
+          xhttp.send();
         }
 
         function setModuleSelectionList() {
@@ -510,6 +593,30 @@
 
       </fieldset>
     </form>
+
+
+    <fieldset>
+      <legend>Dataset Settings</legend>
+      <table>
+        <tr>
+          <td>
+            <label>Select a dataset to delete:</label>
+            <select id = "select-dataset-to-delete">
+              <option value="select-dataset" selected="true" disabled="disabled">Please pick a dataset</option>                
+            </select>
+          </td>
+
+          
+          <td>
+            <div class="dataset-delete-widget">
+              <input type="button" value="Delete" name="delete-dataset" id="delete-dataset">
+              <input type="button" value="Cancel" name="cancel-delete-dataset" id="cancel-delete-dataset">
+            </div>
+          </td>
+        </tr>
+    </table>
+    </fieldset>
+
 
 
     <div id="footer">
