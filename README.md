@@ -10,9 +10,6 @@ Dashboard -
 Settings -
 1. Add new user.
 
-Capture data -
-1. SDR drivers for HackRF and RTL-SDR.
-
 Analyse data - 
 1. Display analysis report on screen.
 2. Download analysis report to a PDF file by pressing a button.
