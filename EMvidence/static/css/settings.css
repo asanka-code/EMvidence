@@ -1,0 +1,20 @@
+
+.ui-menu {
+    width: 200px;
+    vertical-align: top;
+}
+  
+#modules-button {
+    width: 60;
+}
+  
+td {
+    align-self: auto;
+  
+}
+  
+#footer {
+    position: fixed;
+    bottom: 0; 
+    width: 100%;
+}

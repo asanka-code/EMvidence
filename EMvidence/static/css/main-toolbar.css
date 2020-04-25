@@ -1,0 +1,12 @@
+.header {
+    position: relative;
+}
+
+.toolbar {
+    font-size: 1em;
+    width: 100%;
+}
+
+body {
+    background-color:#cfd1d3;
+}

@@ -1,0 +1,32 @@
+
+.ui-menu {
+    width: 200px;
+    vertical-align: top;
+}
+
+td {
+    align-self: auto;
+}
+
+#footer {
+    position: fixed;
+    bottom: 0; 
+    width: 100%;
+}
+  
+#visualize-data {
+    visibility: hidden;
+}
+  
+.ui-progressbar {
+    position: relative;
+    visibility: visible;
+}
+
+.progress-label {
+    position: absolute;
+    left: 50%;
+    top: 4px;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #fff;
+}

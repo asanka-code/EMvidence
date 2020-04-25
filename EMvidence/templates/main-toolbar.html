@@ -1,62 +1,6 @@
-<script>
-    $( function() {
-      $( "#menu" ).menu();
-    } );
-  
-    $( function() {
-      $( ".toolbar" ).controlgroup();
 
-      $( "#logout" ).click( function() {
-        var answer = confirm("Do you want to logout?");
-        if (answer == true){
-          window.location.href = "/logout";
-        } else {
-          // do nothing.
-        }
-      });
-
-      $( "#settings" ).click( function() {
-        window.location.href = "/settings";        
-      });
-
-      $( "#dashboard" ).click( function() {
-        window.location.href = "/dashboard";        
-      });
-
-      $( "#data" ).click( function() {
-        window.location.href = "/upload-data";        
-      });
-
-      $( "#capture" ).click( function() {
-        window.location.href = "/capture";        
-      });
-    
-      $( "#analyse" ).click( function() {
-        window.location.href = "/analyse";        
-      });
-
-      $( "form" ).on( "submit", function( event ) {
-        event.preventDefault();
-      });
-    } );
-</script>
-
-<style>
-
-  .header {
-    position: relative;
-  }
-
-  .toolbar {
-    font-size: 1em;
-    width: 100%;
-  }
-
-  body {
-    background-color:#cfd1d3;
-  }
-
-</style>
+<script src="static/js/main-toolbar.js"></script> 
+<link rel="stylesheet" href="static/css/main-toolbar.css">
 
 <div id="header">
     
@@ -65,7 +9,7 @@
     <br/>
 
     <div align="center">
-    <img src="{{ url_for('static', filename='img/emvidence-title.png') }}" alt="EMvidence Logo" width="1200px"> 
+    <img src="static/img/emvidence-title.png" alt="EMvidence Logo" width="1200px"> 
     </div>
 
     <br/>

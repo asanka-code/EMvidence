@@ -1,0 +1,15 @@
+.login-form {
+    margin: auto;
+    /*width: 20%;*/
+    width: 360px;
+    border: 1px solid;
+    padding: 10px; 
+}
+
+body {
+    background-color:#cfd1d3;
+}
+
+.tool-name {
+    font-style: italic;
+}
