@@ -12,7 +12,6 @@ from flask import Response
 import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
-from emvincelib import iq, ml, stat
 import database
 
 import os
@@ -25,6 +24,10 @@ import zipfile
 import shutil
 import importlib
 import importlib.util
+
+# our own external python files
+from emvincelib import iq, ml, stat
+import authfunctions
 
 # initialize the config file
 config_file_name = "emvidence.config"
@@ -39,47 +42,97 @@ app.config['UPLOAD_FOLDER'] = config['general-settings']['temp-module-directory'
 @app.route("/")
 def index(name=None):
   #return render_template('index.html', name=name)
-  return render_template('login.html', name=name)
+  resp = make_response(render_template('login.html', name=name))
+  resp.set_cookie('auth', 'new')
+  return resp
 
 #-------------------------------------------------------------------------------
 @app.route("/dashboard")
 def dashboard(name=None):
-  return render_template('dashboard.html', name=name)
+
+  if authfunctions.is_logged_in(request.cookies.get('auth')):
+    # logged-in user
+    resp = make_response(render_template('dashboard.html', name=name))
+  else:
+    # the request is not from a logged-in user
+    resp = make_response(render_template('login.html'))
+    resp.set_cookie('auth', 'new')
+  
+  return resp
 
 #-------------------------------------------------------------------------------
 @app.route("/settings")
 def settings(name=None):
-  return render_template('settings.html', name=name)
+
+  if authfunctions.is_logged_in(request.cookies.get('auth')):
+    # logged-in user
+    resp = make_response(render_template('settings.html', name=name))
+  else:
+    # the request is not from a logged-in user
+    resp = make_response(render_template('login.html'))
+    resp.set_cookie('auth', 'new')
+  
+  return resp
 
 #-------------------------------------------------------------------------------
 @app.route("/upload-data")
 def upload_data(name=None):
-  return render_template('upload-data.html', name=name)
+
+  if authfunctions.is_logged_in(request.cookies.get('auth')):
+    # logged-in user
+    resp = make_response(render_template('upload-data.html', name=name))
+  else:
+    # the request is not from a logged-in user
+    resp = make_response(render_template('login.html'))
+    resp.set_cookie('auth', 'new')
+  
+  return resp
 
 #-------------------------------------------------------------------------------
 @app.route("/capture")
 def capture(name=None):
-  return render_template('capture-data.html', name=name)
 
+  if authfunctions.is_logged_in(request.cookies.get('auth')):
+    # logged-in user
+    resp = make_response(render_template('capture-data.html', name=name))
+  else:
+    # the request is not from a logged-in user
+    resp = make_response(render_template('login.html'))
+    resp.set_cookie('auth', 'new')
+  
+  return resp
 
 #-------------------------------------------------------------------------------
 @app.route("/analyse")
 def analyse(name=None):
-  return render_template('analyse-data.html', name=name)
+
+  if authfunctions.is_logged_in(request.cookies.get('auth')):
+    # logged-in user
+    resp = make_response(render_template('analyse-data.html', name=name))
+  else:
+    # the request is not from a logged-in user
+    resp = make_response(render_template('login.html'))
+    resp.set_cookie('auth', 'new')
+  
+  return resp
 
 #-------------------------------------------------------------------------------
 @app.route("/user-authentication", methods=['POST', 'GET'])
 def authentication():
-  # print(request.method, file=sys.stderr)
-  # print(request.form['uname'] + " " + request.form['passwd'], file=sys.stderr)
 
-  if is_passwd_correct(request.form['uname'], request.form['passwd']):
+  if authfunctions.is_passwd_correct(request.form['uname'], request.form['passwd']):
     # correct password
-    return render_template('dashboard.html')
+    #return render_template('dashboard.html')
+    resp = make_response(render_template('dashboard.html'))
+    resp.set_cookie('auth', 'emvidence')
+
   else:
     # incorrect password
-    return render_template('login.html')
-
+    #return render_template('login.html') 
+    resp = make_response(render_template('login.html'))
+    resp.set_cookie('auth', 'wrong-credentials')
+  
+  return resp
 
 #-------------------------------------------------------------------------------
 @app.route("/logout")
@@ -91,7 +144,11 @@ def logout(name=None):
   # closing database connection
   database.closeDBConnection(db_con)
 
-  return render_template('login.html', name=name)
+  #return render_template('login.html', name=name)
+  resp = make_response(render_template('login.html', name=name))
+  resp.set_cookie('auth', 'logged-out')
+  
+  return resp
 
 #-------------------------------------------------------------------------------
 @app.route("/plot")
@@ -249,15 +306,6 @@ def upload_the_data_file():
   # sending a response
   return res
   #return "done"
-  
-
-
-
-
-
-
-
-
 
 #-------------------------------------------------------------------------------
 @app.route("/capture-data", methods=['POST', 'GET'])
@@ -890,44 +938,6 @@ def create_figure():
   axis.set_ylabel("Amplitude")
   return fig
   #return "Analysis page!"
-
-
-#-------------------------------------------------------------------------------
-def is_passwd_correct(uname, passwd):
-  '''
-  This function takes a username and a password as parameters and lookup in the
-  database. Returns true if the username and passwords matches. Returns false otherwise.
-  '''
-
-  # the value to return at the end
-  return_value = False
-
-  # open database connection
-  db_con = database.createDBConnection(database.database_name)
-
-  # Take the password hash of the user from database
-  true_passwd_hash = database.getUserPasswordHash(db_con, str(uname))
-
-  # check if the user exists
-  if true_passwd_hash is None:
-    return_value = False
-  else:
-    # hash the user entered password
-    hasher = hashlib.sha1()
-    hasher.update(passwd.encode('utf-8'))
-    entered_passwd_hash = hasher.hexdigest()
-
-    # Check if the passwords are correct
-    if entered_passwd_hash == true_passwd_hash:
-      # updating the login timestamp
-      database.updateLoginTimestamp(db_con, 1)
-      return_value = True
-    else:
-      return_value = False
-  
-  # closing database connection
-  database.closeDBConnection(db_con)
-  return return_value
 
 #-------------------------------------------------------------------------------
 def addZippedModule(directory_to_extract_to, zip_file_name, module_directory):
