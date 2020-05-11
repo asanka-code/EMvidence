@@ -11,12 +11,6 @@
 td {
     align-self: auto;
 }
-
-#footer {
-    position: fixed;
-    bottom: 0; 
-    width: 100%;
-}
   
 body {
     background-color:#ccddff;

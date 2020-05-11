@@ -28,6 +28,8 @@ import importlib.util
 # our own external python files
 from emvincelib import iq, ml, stat
 import authfunctions
+import dataCaptureFunctions
+
 
 # initialize the config file
 config_file_name = "emvidence.config"
@@ -335,6 +337,23 @@ def capture_data():
   elif center_frequency_scale == "G":
     center_frequency = center_frequency * 1000000000
 
+
+  # Check if the signal SDR device is available.
+  if dataCaptureFunctions.is_device_available(sdr) is False:
+    # the device is not available. We send an error message to the web front-end
+    # compose the response
+    response_body = {
+      "status" : "The SDR device is not available",
+      "file_name" : "",
+      "file_size" : "",
+      "hash_type" : "",
+      "hash_value" : "",
+    }
+    res = make_response(jsonify(response_body), 200)
+    # sending a response
+    return res
+  # Beyond this point executes only if the device is available
+
   # compose the command line arguments for the SDR driver
   command = "python2 ./sdr-drivers/sdr_driver.py " + str(sdr) + " " + str(center_frequency) + " " + str(sampling_rate)
 
@@ -407,12 +426,15 @@ def capture_data():
 
   # removing old graph files
   old_graph_file_name = directoryPath + "waveform." + str(config['general-settings']['figure-sequence_number']) + ".png"
-  os.remove(old_graph_file_name)
+  if os.path.isfile(old_graph_file_name): # checking if the file exists
+    os.remove(old_graph_file_name)
   old_graph_file_name = directoryPath + "fft." + str(config['general-settings']['figure-sequence_number']) + ".png"
-  os.remove(old_graph_file_name)
+  if os.path.isfile(old_graph_file_name): # checking if the file exists
+    os.remove(old_graph_file_name)
   old_graph_file_name = directoryPath + "spectrogram." + str(config['general-settings']['figure-sequence_number']) + ".png"
-  os.remove(old_graph_file_name)
-  
+  if os.path.isfile(old_graph_file_name): # checking if the file exists
+    os.remove(old_graph_file_name)
+
   # generate a random sequence number
   sequence_number = random.randint(1,1000)
 
@@ -433,20 +455,6 @@ def capture_data():
   # save new settings to the config file
   with open(config_file_name, 'w') as configfile:
     config.write(configfile)
-
-
-
-  # plot the waveform graph
-  #graph_file_name = directoryPath + str(config['general-settings']['default-waveform-file'])
-  #iq.plotWaveform(data, show=0, file_name=graph_file_name, file_format='png')
-
-  # plot the PSD graph
-  #graph_file_name = directoryPath + str(config['general-settings']['default-fft-file'])
-  #iq.plotPSD(data, show=0, file_name=graph_file_name, file_format='png')
-
-  # plot the spectrogram graph
-  #graph_file_name = directoryPath + str(config['general-settings']['default-spectrogram-file'])
-  #iq.plotSpectrogram(data, show=0, file_name=graph_file_name, file_format='png')
 
   # clear the memory
   del data

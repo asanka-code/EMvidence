@@ -153,7 +153,7 @@ function submitCaptureSettings() {
   
             } else {
                 // update progress bar status
-                progressLabel.text("Something went wrong...");
+                progressLabel.text(status);
                 var val = progressbar.progressbar( "value" ) || 0;
                 progressbar.progressbar( "value", true);  
             }

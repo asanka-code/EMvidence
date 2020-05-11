@@ -19,7 +19,7 @@ if sdr_name == "hackrf":
 elif sdr_name == "rtlsdr":
     grc = rtlsdr_cfile.top_block()
 elif sdr_name == "cosine":
-    grc = rtlsdr_cfile.top_block()
+    grc = cosine_cfile.top_block()
 else:
     grc = cosine_cfile.top_block()
 
