@@ -39,15 +39,15 @@ $( function() {
     } );
 } );
 
+$( function() {
+  $( ".save-report-button button" ).button();
+  $( ".save-report-button button" ).click( function( event ) {
+    event.preventDefault();
+    saveReport();
+  } );
+} );
+
 function submitAnalysis() {
-    // progress bar and its label objects
-    progressbar = $( "#progressbar" );
-    progressLabel = $( ".progress-label" );
-
-    // update the progress bar status
-    progressLabel.text("Data analysis in progress...");
-    progressbar.progressbar( "value", false);
-
     // a form data object
     var formData = new FormData();
 
@@ -69,6 +69,9 @@ function submitAnalysis() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
+
+        // clear any results from a previous analysis
+        document.getElementById("classification-results").innerHTML = "";
 
         // take the received JSON object
         var response = JSON.parse(this.response);
@@ -109,9 +112,22 @@ function submitAnalysis() {
       }
     };
 
-    // send the AJAX request
-    xhttp.open("POST", "/analyze-data", true);
-    xhttp.send(formData);
+    if(checked_elements.length < 1){
+      alert("Please select the modules to apply.");
+    } else {
+
+      // progress bar and its label objects
+      progressbar = $( "#progressbar" );
+      progressLabel = $( ".progress-label" );
+
+      // update the progress bar status
+      progressLabel.text("Data analysis in progress...");
+      progressbar.progressbar( "value", false);
+
+      // send the AJAX request
+      xhttp.open("POST", "/analyze-data", true);
+      xhttp.send(formData);
+    }
 }
 
 function cancelAnalysis() {
@@ -155,6 +171,49 @@ function cancelAnalysis() {
     xhttp.open("POST", "/cancel-analysis", true);
     xhttp.send(formData);
   }
+
+function saveReport() {
+  // progress bar and its label objects
+  progressbar = $( "#progressbar" );
+  progressLabel = $( ".progress-label" );
+
+  // a form data object
+  var formData = new FormData();
+
+  var temp = 'temp';
+  formData.append("temp", temp);
+
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+
+      if (this.responseText == "done") {
+        // update progress bar status
+        progressLabel.text("Report ready!");
+        var val = progressbar.progressbar( "value" ) || 0;
+        progressbar.progressbar( "value", true);
+          
+        // set the figures visible
+        document.getElementById("visualize-data").style.visibility = "hidden";
+
+        // realoading the iframe to show the results of the analysis
+        //var iframe = document.getElementById('captured-data-view');
+        //iframe.src = iframe.src;
+
+      } else {
+        // update progress bar status
+        progressLabel.text("Something went wrong...");
+        var val = progressbar.progressbar( "value" ) || 0;
+        progressbar.progressbar( "value", true);  
+      }
+    }
+  };
+
+  // send the AJAX request
+  xhttp.open("POST", "/cancel-analysis", true);
+  xhttp.send(formData);
+}
+
 
 $( function() {
     $( ".widget input[type=submit]" ).button();
