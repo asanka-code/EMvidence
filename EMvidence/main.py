@@ -24,6 +24,7 @@ import zipfile
 import shutil
 import importlib
 import importlib.util
+from pathlib import Path
 
 # our own external python files
 from emvincelib import iq, ml, stat
@@ -244,13 +245,25 @@ def upload_the_data_file():
   iq.sampleRate = int(sampling_rate)
   print("Sampling rate of emvincelib: " + str(iq.sampleRate))
 
+
   # removing old graph files
   old_graph_file_name = directoryPath + "waveform." + str(config['general-settings']['figure-sequence_number']) + ".png"
-  os.remove(old_graph_file_name)
+  if os.path.isfile(old_graph_file_name): # checking if the file exists
+    os.remove(old_graph_file_name)
   old_graph_file_name = directoryPath + "fft." + str(config['general-settings']['figure-sequence_number']) + ".png"
-  os.remove(old_graph_file_name)
+  if os.path.isfile(old_graph_file_name): # checking if the file exists
+    os.remove(old_graph_file_name)
   old_graph_file_name = directoryPath + "spectrogram." + str(config['general-settings']['figure-sequence_number']) + ".png"
-  os.remove(old_graph_file_name)
+  if os.path.isfile(old_graph_file_name): # checking if the file exists
+    os.remove(old_graph_file_name)
+
+  # removing old graph files
+  #old_graph_file_name = directoryPath + "waveform." + str(config['general-settings']['figure-sequence_number']) + ".png"
+  #os.remove(old_graph_file_name)
+  #old_graph_file_name = directoryPath + "fft." + str(config['general-settings']['figure-sequence_number']) + ".png"
+  #os.remove(old_graph_file_name)
+  #old_graph_file_name = directoryPath + "spectrogram." + str(config['general-settings']['figure-sequence_number']) + ".png"
+  #os.remove(old_graph_file_name)
   
   # generate a random sequence number
   sequence_number = random.randint(1,1000)
@@ -588,13 +601,18 @@ def analze_data():
   dataset_choice = request.form['dataset_choice']
   iot_device_type = request.form['iot_device_type']
 
+  # clear the 'results' directory to remove any previously generated results
+  if os.path.isdir("./results"):
+    shutil.rmtree("./results")
+  # now, create a new 'results directory'
+  Path("./results").mkdir(parents=True, exist_ok=True)
+
   # open database connection
   db_con = database.createDBConnection(database.database_name)
   # get the path to the selected EM trace
   emtrace_path = database.getEMTracePath(db_con, int(dataset_choice))
   # closing database connection
   database.closeDBConnection(db_con)
-
 
   # result count
   count = 0
@@ -621,8 +639,9 @@ def analze_data():
     # loading module
     mod = loadModule(module_path)
     # calling module functions
-    mod.initialize(1)
-    results = mod.getResults(str(emtrace_path))
+    #mod.initialize(1)
+    mod.initialize(module_id, str(emtrace_path), "./results")
+    results = mod.getResults()
     print("Module results: " + str(results))
 
     # add this result to the JSON object
@@ -640,6 +659,13 @@ def analze_data():
 #-------------------------------------------------------------------------------
 @app.route("/cancel-analysis", methods=['POST', 'GET'])
 def cancel_analysis():
+
+  # clear the 'results' directory to remove any previously generated results
+  if os.path.isdir("./results"):
+    shutil.rmtree("./results")
+  # now, create a new 'results directory'
+  Path("./results").mkdir(parents=True, exist_ok=True)
+  
   return "done"
 
 

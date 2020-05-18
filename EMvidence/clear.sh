@@ -11,3 +11,10 @@ cp emvidence-database.db.default emvidence-database.db
 # remove the '*.pyc' files
 find . -name "*.pyc" -type f -delete
 
+# clearing the 'modules' directory 
+rm -r modules/*
+touch modules/placeholder.txt
+
+# removing the 'results' directory 
+rm -r results/*
+touch results/placeholder.txt
