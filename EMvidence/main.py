@@ -26,6 +26,11 @@ import importlib
 import importlib.util
 from pathlib import Path
 
+from jinja2 import Environment, FileSystemLoader
+from weasyprint import HTML, CSS
+from os import listdir
+from os.path import isfile, isdir, join
+
 # our own external python files
 from emvincelib import iq, ml, stat
 import authfunctions
@@ -668,6 +673,64 @@ def cancel_analysis():
   
   return "done"
 
+
+#-------------------------------------------------------------------------------
+@app.route("/create-report", methods=['POST', 'GET'])
+def create_report():
+  env = Environment(loader=FileSystemLoader('.'))
+  template = env.get_template("templates/report-template.html")
+
+  # take the list of directories that contains the results of each module
+  module_dirs = [d for d in listdir("./results") if isdir(join("./results", d))]
+  content = ""
+  for i in module_dirs:
+    content = content + "<b>Module ID:</b> " + str(i) + "<br/>"
+    content = content + "<b>Module Name:</b> " + "My module" + "<br/>"
+    content = content + "<b>Module Description:</b> " + "This is the description of the module." + "<br/>"
+
+    # take the list of image files that contains the results of this module
+    module_path = join("./results", str(i))
+    module_files = [f for f in listdir(module_path) if isfile(join(module_path, f))]
+    
+    for j in module_files:
+      # take the path to the file
+      file_path = join(module_path, j)
+
+      # check file extension to identify file type
+      extension = str(j).split(".")[1]
+      if extension == "txt":
+        # display text file content
+        content = content + "<b>Module Output:</b> " + "<br/>"
+        f = open(file_path, "r") 
+        for line in f:
+          content = content + str(line) + "<br/>"
+        f.close()
+      elif extension == "png":
+        # display the image file
+        content = content + "<img src='" + file_path + "' alt='graph' width='10'/>" + "<br/>"
+
+    content = content + "<hr/>"
+
+  template_vars = {"title" : "EMvidence - Analysis Report"
+    , "device": "Raspberry Pi"
+    , "em_data_file": "datafile.npy"
+    , "hash_function": "SHA256"
+    , "hash_value": "123456789"
+    , "timestamp": "2020:05:19 18:34:16"
+    , "logo_banner": "<img src='affiliation-logos.png' alt='Girl in a jacket' width='10'/>"
+    , "module_results": content}
+  html_out = template.render(template_vars)
+
+  html = HTML(string=html_out, base_url=__file__)
+  css = CSS(string='@page { size: A4; margin: 2cm } img { width: 100% } ')
+  html.write_pdf("./results/report.pdf", stylesheets=[css])
+  
+  return "done"
+
+#-------------------------------------------------------------------------------
+@app.route("/send-report", methods=['POST', 'GET'])
+def send_report():
+  return send_file("./results/report.pdf")
 
 #-------------------------------------------------------------------------------
 @app.route("/get_dataset_list", methods=['POST', 'GET'])

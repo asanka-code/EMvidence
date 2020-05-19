@@ -192,13 +192,24 @@ function saveReport() {
         progressLabel.text("Report ready!");
         var val = progressbar.progressbar( "value" ) || 0;
         progressbar.progressbar( "value", true);
-          
-        // set the figures visible
-        document.getElementById("visualize-data").style.visibility = "hidden";
+    
+        // download the report file
+        fetch('/send-report')
+        .then(resp => resp.blob())
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          // the filename you want
+          a.download = 'report.pdf';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          //alert('your file has downloaded!'); // or you know, something with better UX...
+        })
+        .catch(() => alert('error occurred!'));
 
-        // realoading the iframe to show the results of the analysis
-        //var iframe = document.getElementById('captured-data-view');
-        //iframe.src = iframe.src;
 
       } else {
         // update progress bar status
@@ -210,7 +221,7 @@ function saveReport() {
   };
 
   // send the AJAX request
-  xhttp.open("POST", "/cancel-analysis", true);
+  xhttp.open("POST", "/create-report", true);
   xhttp.send(formData);
 }
 
