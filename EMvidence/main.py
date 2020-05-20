@@ -8,6 +8,7 @@ import sys
 import io
 import random
 import time
+import datetime
 from flask import Response
 import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -606,6 +607,36 @@ def analze_data():
   dataset_choice = request.form['dataset_choice']
   iot_device_type = request.form['iot_device_type']
 
+  #--------------------------------------------------------------
+  # save the details that are necessary to create a report later
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+  # reading the configuration file
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
+  # get the IoT device name
+  device_name = database.getIoTDeviceName(db_con, int(iot_device_type))
+  config['report-settings']['device'] = str(device_name)
+  # get the path to the selected EM trace
+  emtrace_path = database.getEMTracePath(db_con, int(dataset_choice))
+  config['report-settings']['em-data-file'] = str(emtrace_path)
+  # get the emtrace hash function
+  emtrace_hash_function = database.getEMTraceHashFunction(db_con, int(dataset_choice))
+  config['report-settings']['hash-function'] = str(emtrace_hash_function)
+  # get the emtrace hash value
+  emtrace_hash_value = database.getEMTraceHashValue(db_con, int(dataset_choice))
+  config['report-settings']['hash-value'] = str(emtrace_hash_value)
+  # create timestamp
+  timestamp = time.time()
+  timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+  config['report-settings']['time-stamp'] = str(timestamp)
+  # closing database connection
+  database.closeDBConnection(db_con)
+  # save the new information to config file
+  with open(config_file_name, 'w') as configfile:
+    config.write(configfile)
+  #--------------------------------------------------------------
+
   # clear the 'results' directory to remove any previously generated results
   if os.path.isdir("./results"):
     shutil.rmtree("./results")
@@ -677,6 +708,27 @@ def cancel_analysis():
 #-------------------------------------------------------------------------------
 @app.route("/create-report", methods=['POST', 'GET'])
 def create_report():
+
+  #--------------------------------------------------------------
+  # take the details that are necessary to create the report
+  # reading the configuration file
+  config = configparser.ConfigParser()
+  config.read(config_file_name)
+  # get the IoT device name
+  device_name = config['report-settings']['device']
+  # get the path to the selected EM trace
+  emtrace_path = config['report-settings']['em-data-file']
+  # get the emtrace hash function
+  emtrace_hash_function = config['report-settings']['hash-function']
+  # get the emtrace hash value
+  emtrace_hash_value = config['report-settings']['hash-value']
+  # get the timestamp
+  timestamp = config['report-settings']['time-stamp']
+  #--------------------------------------------------------------
+
+  # open database connection
+  db_con = database.createDBConnection(database.database_name)
+
   env = Environment(loader=FileSystemLoader('.'))
   template = env.get_template("templates/report-template.html")
 
@@ -685,8 +737,12 @@ def create_report():
   content = ""
   for i in module_dirs:
     content = content + "<b>Module ID:</b> " + str(i) + "<br/>"
-    content = content + "<b>Module Name:</b> " + "My module" + "<br/>"
-    content = content + "<b>Module Description:</b> " + "This is the description of the module." + "<br/>"
+    # get the name of the module
+    module_name = database.getModuleName(db_con, int(i))
+    content = content + "<b>Module Name:</b> " + module_name + "<br/>"
+    # get the description of the module
+    module_description = database.getModuleDescription(db_con, int(i))
+    content = content + "<b>Module Description:</b> " + module_description + "<br/>"
 
     # take the list of image files that contains the results of this module
     module_path = join("./results", str(i))
@@ -712,12 +768,11 @@ def create_report():
     content = content + "<hr/>"
 
   template_vars = {"title" : "EMvidence - Analysis Report"
-    , "device": "Raspberry Pi"
-    , "em_data_file": "datafile.npy"
-    , "hash_function": "SHA256"
-    , "hash_value": "123456789"
-    , "timestamp": "2020:05:19 18:34:16"
-    , "logo_banner": "<img src='affiliation-logos.png' alt='Girl in a jacket' width='10'/>"
+    , "device": device_name
+    , "em_data_file": emtrace_path
+    , "hash_function": emtrace_hash_function
+    , "hash_value": emtrace_hash_value
+    , "timestamp": timestamp
     , "module_results": content}
   html_out = template.render(template_vars)
 
@@ -725,6 +780,9 @@ def create_report():
   css = CSS(string='@page { size: A4; margin: 2cm } img { width: 100% } ')
   html.write_pdf("./results/report.pdf", stylesheets=[css])
   
+  # closing database connection
+  database.closeDBConnection(db_con)
+
   return "done"
 
 #-------------------------------------------------------------------------------

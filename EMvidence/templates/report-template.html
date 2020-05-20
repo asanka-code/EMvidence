@@ -13,6 +13,10 @@
 
     <table>
         <tr>
+            <td><b>Analysis Date/Time:</b></td> <td> {{ timestamp }} </td>
+        </tr>
+        
+        <tr>
             <td><b>Device Under Investigation:</b></td> <td> {{ device }} </td>
         </tr>
 
@@ -20,12 +24,14 @@
             <td><b>EM Data File:</b></td> <td> {{ em_data_file }} </td>
         </tr>
             
-        <tr>
-            <td><b>Hash Value ({{ hash_function }}):</b></td> <td> {{ hash_value }} </td>
-        </tr>
+    </table>
 
+    <table>
         <tr>
-            <td><b>Analysis Date/Time:</b></td> <td> {{ timestamp }} </td>
+            <td><b>Hash Value ({{ hash_function }}):</b></td>
+        </tr>
+        <tr>
+            <td> {{ hash_value }} </td>
         </tr>
     </table>
     

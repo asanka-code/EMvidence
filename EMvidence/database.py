@@ -93,6 +93,22 @@ def getIoTDevices(conn):
     #print(task) #Print the first column retrieved(user's name)
     return cur
 
+def getIoTDeviceName(conn, id):
+    deviceid = (id,)
+    sql = ''' SELECT name FROM iotdevices WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, deviceid)
+
+    device_name = cur.fetchone()
+
+    # take the result out
+    if device_name is None:
+        return "invalid"
+    else:
+        #password_hash = cur.fetchone() #retrieve the first row
+        #print("Password: ", str(password_hash[0]))
+        return device_name[0]
+
 def removeIoTDevice(conn, deviceID):
     iot_device = (deviceID,)
     sql = ''' DELETE FROM iotdevices WHERE id=?; '''
@@ -129,6 +145,14 @@ def getModuleName(conn, moduleID):
     cur.execute(sql, module)
     module_row = cur.fetchone() #retrieve the first row    
     return module_row[1]
+
+def getModuleDescription(conn, moduleID):
+    module = (moduleID,)
+    sql = ''' SELECT * FROM modules WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, module)
+    module_row = cur.fetchone() #retrieve the first row    
+    return module_row[2]
 
 def removeModule(conn, moduleID):
     module = (moduleID,)
@@ -187,6 +211,22 @@ def getEMTracePath(conn, traceID):
     cur.execute(sql, trace)
     trace_row = cur.fetchone() #retrieve the first row    
     return trace_row[1]
+
+def getEMTraceHashFunction(conn, traceID):
+    trace = (traceID,)
+    sql = ''' SELECT * FROM emtraces WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, trace)
+    trace_row = cur.fetchone() #retrieve the first row    
+    return trace_row[5]
+
+def getEMTraceHashValue(conn, traceID):
+    trace = (traceID,)
+    sql = ''' SELECT * FROM emtraces WHERE id=?; '''
+    cur = conn.cursor()
+    cur.execute(sql, trace)
+    trace_row = cur.fetchone() #retrieve the first row    
+    return trace_row[4]
 
 def getDatasetIDofEMTrace(conn, traceID):
     trace = (traceID,)
