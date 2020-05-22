@@ -240,41 +240,43 @@ def getData(cfileName):
     # Take each consecutive interleaved I sample and Q sample to create a single complex element.
     data = data[0::2] + 1j*data[1::2]
     
-    #print("data type=", type(data))
+    print("data type=", type(data))
     
     # Return the complex numpy array.
     return data
 
-def getSegmentData(fileName, offsetTime, windowTime, fileType="cfile"):
+def getSegmentData(cFileName, offsetTime, windowTime):
     '''
     Given a I-Q data file name, an offset value as a time, and an window time,
     this function extracts the required segment from the file and return it as
     a complx numpy array.    
     '''
+    # converting offset and window from time to index values (sample_points = time x sample_rate)
+    offset_index = offsetTime * sampleRate
+    window_index = windowTime * sampleRate
+    
+    # converting the offset and window index values into byte values of the I-Q data file
+    #Original bytes in file (offset_bytes) => array of float32 (4bytes in each element)
+    #data = np.fromfile(cfileName, dtype="float32")
+    #each pair of elements of the array is combined to create a single complex numpy array element.
+    #data = data[0::2] + 1j*data[1::2]
+    #Therefore, origina_file_size = numpy_array_length x 2 x 4
+    offset_bytes = int(offset_index * 2 * 4)
+    window_bytes = int(window_index * 2 * 4)
+    
+    #print("offset_bytes = ", offset_bytes)
+    #print("window_index = ", window_index)
+    #print("window_bytes = ", window_bytes)
+    
+    # reading the required segment of bytes from the file
+    f = open(cFileName, 'rb')
+    f.seek(offset_bytes,1)
+    segment = f.read(window_bytes)
+    #print("segment length = ", len(segment))
 
-    if (fileType=="cfile"):
-        # dealing with a cfile file format
-        data = getData(fileName)
-
-    elif (fileType=="npy"):
-        # dealing with a numpy file format
-        data = np.load(fileName, mmap_mode='r')
-
-    else:
-        # unrecognized file type
-        return -1
-
-    # Segment starting offset (sample points)
-    start = offsetTime * sampleRate
-    # Segment ending offset (sample points)
-    end = start + (windowTime * sampleRate)
-    #print("start=%d", int(start))
-    #print("end=%d", int(end))
-    #Return the starting index and ending index
-    segment = data[int(start):int(end)]
-
+    data = np.frombuffer(segment, dtype="float32")
+    data = data[0::2] + 1j*data[1::2]
     return data
-
 
 
 ###############################################################################
@@ -339,9 +341,6 @@ def plotFFT(data, show=1):
     """
     Given a data set as a complex numpy array, this function returns the FFT plot.
     """
-
-    plt.figure()
-
     # get the length of the selected data sample range        
     N = len(data)
     # get the time interval beteween each sample
@@ -381,10 +380,10 @@ def plotSpectrogram(data, show=1, file_name='./spectrogram.pdf', file_format='pd
     
     # plot the spectrogram of the selected sample range
     #plt.specgram(data, NFFT=4096, Fs=sampleRate, cmap=plt.cm.get_cmap("Greys"))
-    plt.specgram(data, NFFT=512, Fs=sampleRate)
     #plt.specgram(data, NFFT=4096, Fs=sampleRate)
+    plt.specgram(data, NFFT=1024, Fs=sampleRate)
     plt.xlabel("Time (s)")
-    plt.ylabel("Frequency (Hz)")
+    plt.ylabel("Frequency (MHz)")
     #plt.axis('off')
     #ax = plt.axes()
     #ax.xaxis.set_visible(False)
