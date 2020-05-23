@@ -7,18 +7,8 @@ Run the start.sh shell script to start the web service.
 
 TODO:
 
-Dashboard - 
-1. A summary of data and supported features of the framework.
-
-Settings -
-1. Add new user.
-
-Analyse data - 
-1. Display analysis report on screen.
-2. Download analysis report to a PDF file by pressing a button.
-
-General:
-1. Actual modules with trained ML models.
+- Dashboard should display a summary of data and supported features of the framework.
+- Settings page should facilitate adding a new user.
 
 ## Setting up EMvidence:
 
