@@ -3,81 +3,31 @@
 ## About
 EMvidence is a tool that can be used to gather insights from electromagnetic (EM) side-channel emissions of computers. Users can capture EM traces of a device-under-test (DUT) through EMvidence using a software defined radio (SDR) hardware. Additionally, users can upload EM traces that are captured through other means into EMvidence as well. An EM trace can be analysed to gather insights of the DUT by enabling various EMvidence modules. Some EMvidence modules are provided by the developer while users have the freedom to build third-party modules according to their needs.
 
-Run the start.sh shell script to start the web service.
+## Installation
+The easiest way to use EMvidence is by downloading a pre-configured VM image and then running it on Oracle Virtual Box. The latest pre-configured images can be found in the following [Google Drive](http://example.com/) folder.
+If you are planning to run EMvidence natively on a computer, consider the following instructions.
+
+#### System requirements:
+- The computer must have at least 8GB of RAM and sufficient disk space to hold your EM traces.
+- We prefer Ubuntu operating system and the instructions assume so. If you are using something else, please check how to install the required packages on your preferred system.
+- An Internet connection to download and install required packages.
+
+#### Installing required packages:
+1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for Python 3.7, which we need to install other required packages. 
+2. Now, open a terminal and run the following commands to install required packages through conda.
+```
+$ conda install -c ryanvolz gnuradio
+```
+
+#### Downloading and running:
+```
+$ git clone https://github.com/asanka-code/EMvidence.git
+$ cd EMvidence/EMvidence/
+$ ./start.sh
+```
+Now, open a web browser and goto the URL http://0.0.0.0:5000/. You can login by using *emvidence* as the username and password.
 
 #### To Do:
 
 - Dashboard should display a summary of data and supported features of the framework.
 - Settings page should facilitate adding a new user.
-
-## Setting up EMvidence:
-
-1. Install and start Nginx web server:
-```
-sudo apt-get install nginx
-sudo service nginx start
-```
-
-2. Copy the files and directories of the EMvidence flask app into the Nginx web root directory (/var/www/html).
-
-3. Create an nginx configuration file called "emvidenceapp" using the following command.
-	
-	sudo nano /etc/nginx/sites-available/emvidenceapp
-
-Add the following content to that file.
-```
-server {
-	listen 80 default_server;
-	listen [::]:80;
-
-	root /var/www/html;
-
-	server_name example.com;
-
-	location /static {
-	    alias /var/www/html/static;
-	}
-
-	location / {
-	    try_files $uri @wsgi;
-	}
-
-	location @wsgi {
-	    proxy_pass http://unix:/tmp/gunicorn.sock;
-	    include proxy_params;
-	}
-
-	location ~* .(ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|css|rss|atom|js|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf)$ {
-	    access_log off;
-	    log_not_found off;
-	    expires max;
-	}
-}
-```
-
-4. Change the symbolic link to the emvidenceapp in the sites-enabled directory of nginx.
-
-	cd /etc/nginx/sites-enabled/
-	sudo rm default
-	sudo ln -s /etc/nginx/sites-available/emvidenceapp .
-
-5. Test the nginx settings and if there are no issues, reload the nginx service.
-
-	sudo nginx -t 
-	sudo service nginx reload
-
-6. Install the Gunicorn WSGI server.
-
-	sudo apt install gunicorn3
-
-7.  Start WSGI server with the following command.
-
-	sudo gunicorn3 --bind=unix:/tmp/gunicorn.sock --workers=4 --chdir /var/www/html main:app
-
-Now, open a web browser and goto 'localhost' to access the EMvidence web interface.
-
-
-## Requirements:
-
-1. Disabling Web browser caching (Firefox) :
-    Type in the address bar **about:config**, then press the button **i'l be careful i promise**. Then type in the bar **browser.cache.disk.enable**. Then double click on it to make it  **false**. Do the same with **browser.cache.memory.enable**. Then, exit firefox and restart-it.
