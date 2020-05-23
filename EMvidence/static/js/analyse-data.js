@@ -173,6 +173,12 @@ function cancelAnalysis() {
   }
 
 function saveReport() {
+
+  // report file name
+  var date_object = new Date();
+  var number = date_object.getTime();
+  var report_name = "EMvidence-Report-" + number;
+
   // progress bar and its label objects
   progressbar = $( "#progressbar" );
   progressLabel = $( ".progress-label" );
@@ -202,7 +208,8 @@ function saveReport() {
           a.style.display = 'none';
           a.href = url;
           // the filename you want
-          a.download = 'report.pdf';
+          //a.download = 'report.pdf';
+          a.download = report_name;
           document.body.appendChild(a);
           a.click();
           window.URL.revokeObjectURL(url);
