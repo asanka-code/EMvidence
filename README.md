@@ -1,11 +1,11 @@
 # EMvidence
 
 ## About
-EMvidence is a tool that can be used to gather insights from electromagnetic (EM) side-channel emissions of computers.
+EMvidence is a tool that can be used to gather insights from electromagnetic (EM) side-channel emissions of computers. Users can capture EM traces of a device-under-test (DUT) through EMvidence using a software defined radio (SDR) hardware. Additionally, users can upload EM traces that are captured through other means into EMvidence as well. An EM trace can be analysed to gather insights of the DUT by enabling various EMvidence modules. Some EMvidence modules are provided by the developer while users have the freedom to build third-party modules according to their needs.
 
 Run the start.sh shell script to start the web service.
 
-TODO:
+#### To Do:
 
 - Dashboard should display a summary of data and supported features of the framework.
 - Settings page should facilitate adding a new user.
