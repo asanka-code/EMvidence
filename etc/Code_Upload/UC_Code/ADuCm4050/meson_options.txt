@@ -1,2 +1,0 @@
-option('platform', type : 'combo', choices : ['DUAL_BOARD', 'EZ_KIT', 'COG3029', 'COG4050'], value : 'COG4050')
-option('pack_root', type : 'string', value : '',description : 'Path to CMSIS Packs Root folder, e.g. .packs')

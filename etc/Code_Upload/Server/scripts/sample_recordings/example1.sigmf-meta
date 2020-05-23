@@ -1,1 +1,0 @@
-{"global": {"core:version": "0.0.1", "core:datatype": "f32", "core:description": "Uploaded signal", "core:sha512": "99e3b72bf55d4375ecc36312382a9c65dac200b5518f445c251ff2bbd9c5d7900034b6644666d55a1108562403e92bd04e1529795c740f37ce08e2d9771edbab"}, "captures": [{"core:sample_start": 0}], "annotations": [{"core:sample_count": 16, "core:sample_start": 0}]}
