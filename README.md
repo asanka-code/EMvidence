@@ -1,5 +1,8 @@
 # EMvidence
 
+## About
+EMvidence is a tool that can be used to gather insights from electromagnetic (EM) side-channel emissions of computers.
+
 Run the start.sh shell script to start the web service.
 
 TODO:
@@ -20,9 +23,10 @@ General:
 ## Setting up EMvidence:
 
 1. Install and start Nginx web server:
-
-	sudo apt-get install nginx
-	sudo service nginx start
+```
+sudo apt-get install nginx
+sudo service nginx start
+```
 
 2. Copy the files and directories of the EMvidence flask app into the Nginx web root directory (/var/www/html).
 
