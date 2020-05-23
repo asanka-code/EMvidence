@@ -29,6 +29,9 @@ $ ./start.sh
 ```
 Now, open a web browser and goto the URL http://0.0.0.0:5000/. You can login by using *emvidence* as the username and password.
 
+## Usage
+This section is yet to be written.
+
 #### To Do:
 
 - Dashboard should display a summary of data and supported features of the framework.
