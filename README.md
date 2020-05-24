@@ -19,6 +19,7 @@ If you are planning to run EMvidence natively on a computer, consider the follow
 2. Now, open a terminal and run the following commands to install required packages through conda.
 ```
 $ conda install -c ryanvolz gnuradio
+$ conda install -c conda-forge weasyprint
 ```
 
 #### Downloading and running:
