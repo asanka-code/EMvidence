@@ -265,7 +265,7 @@ def getSegmentData(fileName, offsetTime, windowTime, fileType="cfile"):
         return -1
 
     # Segment starting offset (sample points)
-    start = offsetTime * sampleRate
+    start = offsetTime * sampleRate    
     # Segment ending offset (sample points)
     end = start + (windowTime * sampleRate)
     #print("start=%d", int(start))
@@ -273,7 +273,8 @@ def getSegmentData(fileName, offsetTime, windowTime, fileType="cfile"):
     #Return the starting index and ending index
     segment = data[int(start):int(end)]
 
-    return data
+    #return data
+    return segment
 
 
 
