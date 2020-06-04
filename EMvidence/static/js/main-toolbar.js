@@ -34,6 +34,10 @@ $( function() {
       window.location.href = "/analyse";        
     });
 
+    $( "#about" ).click( function() {
+      window.location.href = "/about";        
+    });
+
     $( "form" ).on( "submit", function( event ) {
       event.preventDefault();
     });

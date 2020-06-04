@@ -70,6 +70,20 @@ def dashboard(name=None):
   return resp
 
 #-------------------------------------------------------------------------------
+@app.route("/about")
+def about(name=None):
+
+  if authfunctions.is_logged_in(request.cookies.get('auth')):
+    # logged-in user
+    resp = make_response(render_template('about.html', name=name))
+  else:
+    # the request is not from a logged-in user
+    resp = make_response(render_template('login.html'))
+    resp.set_cookie('auth', 'new')
+  
+  return resp
+
+#-------------------------------------------------------------------------------
 @app.route("/settings")
 def settings(name=None):
 
