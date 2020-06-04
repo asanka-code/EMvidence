@@ -37,3 +37,5 @@ This section is yet to be written. This will be compelted soon.
 
 - Dashboard should display a summary of data and supported features of the framework.
 - Settings page should facilitate adding a new user.
+- The gerated report should contain more information about the EM trace - SDR device used, center frequency, and sampling rate.
+- Currently, when uploading an EM trace in cFile format, the file has to have a unique name. But, EMvidence should take a file in any name and then automatically rename to a unique string before setting in the database.
